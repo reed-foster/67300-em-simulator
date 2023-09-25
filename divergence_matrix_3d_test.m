@@ -6,12 +6,12 @@ Fx = 200 - (2*sin(pi*x.^2/(50)) + 2*y.^2);
 Fy = 200 - (10*sin(pi*x.^2/(50)) + 0.1*y.^2);
 
 % matlab implementation of divergence (does a central difference in the middle and left/right-handed difference on the boundaries)
-D = divergence(x,y,Fx,Fy);
+D = permute(divergence(x,y,Fx,Fy), [2 1]);
 
 % our finite difference implementation
 % divide by twice the step size
 raw = divergence_matrix_2d(101,21)*[reshape(Fx',[2121 1]); reshape(Fy',[2121 1])];
-div = reshape(raw, [101 21])' / 4;
+div = reshape(raw, [101 21]) / 4;
 
 % trim boundaries, since edge calculation is slightly different from matlab's implementation
 % we don't really care too much about exactly what the divergence calculation will be at the boundary, since the field should be close to zero when we use a PML
@@ -21,7 +21,7 @@ trim = 2;
 D_trim = D(trim:end-trim,trim:end-trim);
 div_trim = div(trim:end-trim,trim:end-trim);
 
-err = norm(D_trim - div_trim);
+err = norm(D_trim - div_trim, "fro");
 
 disp(sprintf("2D error = %d", err));
 
@@ -41,12 +41,12 @@ Fy = 200 - (10*sin(pi*x.^2/(50)) + 0.1*y.^2 + 2*exp(-z.^2/10));
 Fz = 200 - (0.1*sin(pi*x.^2/(50)) + 4*y.^2 + 0.1*exp(-z.^2/800));
 
 % matlab implementation of divergence (does a central difference in the middle and left/right-handed difference on the boundaries)
-D = divergence(x,y,z,Fx,Fy,Fz);
+D = permute(divergence(x,y,z,Fx,Fy,Fz), [2 1 3]);
 
 % our finite difference implementation
 % divide by twice the step size
-raw = divergence_matrix_3d(11,21,71)*[reshape(permute(Fx,[3 2 1]),[16401 1]); reshape(permute(Fy,[3 2 1]),[16401 1]); reshape(permute(Fz,[3 2 1]),[16401 1])];
-div = permute(reshape(raw, [11 21 71]), [3 2 1]) / 4;
+raw = divergence_matrix_3d(11,21,71)*[reshape(permute(Fx,[2 1 3]),[16401 1]); reshape(permute(Fy,[2 1 3]),[16401 1]); reshape(permute(Fz,[2 1 3]),[16401 1])];
+div = reshape(raw, [11 21 71]) / 4;
 
 % trim boundaries, since edge calculation is slightly different from matlab's implementation
 % we don't really care too much about exactly what the divergence calculation will be at the boundary, since the field should be close to zero when we use a PML
@@ -56,6 +56,6 @@ trim = 2;
 D_trim = D(trim:end-trim,trim:end-trim,trim:end-trim);
 div_trim = div(trim:end-trim,trim:end-trim,trim:end-trim);
 
-err = norm(D_trim - div_trim);
+err = norm(D_trim - div_trim, "fro");
 
 disp(sprintf("3D error = %d", err));
