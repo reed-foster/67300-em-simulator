@@ -1,16 +1,29 @@
-% test for divergence_matrix_3d method
-[x,y] = meshgrid(-8:2:8,-8:2:8);
-Fx = 200 - (x.^2 + y.^2);
-Fy = 200 - (x.^2 + y.^2);
+dbg_plot = true; % plot 2D contourf of divergence of vector field
+
+% test for divergence_matrix_2d method
+[x,y] = meshgrid(-100:2:100,-20:2:20);
+Fx = 200 - (2*sin(pi*x.^2/(50)) + 2*y.^2);
+Fy = 200 - (10*sin(pi*x.^2/(50)) + 0.1*y.^2);
 
 D = divergence(x,y,Fx,Fy);
 
-div = divergence_matrix_2d(9,9);
+% divide by twice the step size
+div = reshape(divergence_matrix_2d(101,21)*[reshape(Fx',[2121 1]); reshape(Fy',[2121 1])], [101 21])' / 4;
 
-reshape(div,[9,9]);
+trim = 2; % trim boundaries, since edge calculation is slightly different from matlab's implementation
 
-subplots
-contourf
+D_trim = D(trim:end-trim,trim:end-trim);
+div_trim = div(trim:end-trim,trim:end-trim);
 
+err = norm(D_trim - div_trim);
 
-spy(div)
+disp(sprintf("error = %d", err));
+
+if (dbg_plot)
+  close all;
+  subplot(2,1,1);
+  contourf(x(trim:end-trim,trim:end-trim),y(trim:end-trim,trim:end-trim),D(trim:end-trim,trim:end-trim));
+  
+  subplot(2,1,2);
+  contourf(x(trim:end-trim,trim:end-trim),y(trim:end-trim,trim:end-trim),div(trim:end-trim,trim:end-trim));
+end 
