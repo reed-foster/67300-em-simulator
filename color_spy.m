@@ -8,5 +8,6 @@ function f = color_spy(M)
   h = pcolor(a);
   set(h, 'EdgeColor', 'none');
   axis ij
-  axis square;
+  daspect([1 1 1]);
+  colorbar;
 end

@@ -1,3 +1,4 @@
+close all;
 L = 11;
 M = 16;
 N = 13;
@@ -35,6 +36,34 @@ err_x = norm(curl_x_trim - mat_curl_x_trim, "fro");
 err_y = norm(curl_y_trim - mat_curl_y_trim, "fro");
 err_z = norm(curl_z_trim - mat_curl_z_trim, "fro");
 
-disp(sprintf("Curl_x error = %d", err_x));
-disp(sprintf("Curl_y error = %d", err_y));
-disp(sprintf("Curl_z error = %d", err_z));
+disp(sprintf("Curl_x error (loop) = %d", err_x));
+disp(sprintf("Curl_y error (loop) = %d", err_y));
+disp(sprintf("Curl_z error (loop) = %d", err_z));
+
+% test sparse implementation
+c_sparse = curl_matrix_sparse(L,M,N) / 4;
+raw_sparse = c*[reshape(permute(Fx,[2 1 3]),[L*M*N 1]); reshape(permute(Fy,[2 1 3]),[L*M*N 1]); reshape(permute(Fz,[2 1 3]),[L*M*N 1])];
+
+curl_sparse_x = reshape(raw_sparse(1:L*M*N), [L M N]);
+curl_sparse_y = reshape(raw_sparse(L*M*N+1:2*L*M*N), [L M N]);
+curl_sparse_z = reshape(raw_sparse(2*L*M*N+1:3*L*M*N), [L M N]);
+
+curl_sparse_x_trim = curl_sparse_x(trim:end-trim,trim:end-trim,trim:end-trim);
+curl_sparse_y_trim = curl_sparse_y(trim:end-trim,trim:end-trim,trim:end-trim);
+curl_sparse_z_trim = curl_sparse_z(trim:end-trim,trim:end-trim,trim:end-trim);
+
+err_sparse_x = norm(curl_sparse_x_trim - mat_curl_x_trim, "fro");
+err_sparse_y = norm(curl_sparse_y_trim - mat_curl_y_trim, "fro");
+err_sparse_z = norm(curl_sparse_z_trim - mat_curl_z_trim, "fro");
+
+disp(sprintf("Curl_x error (sparse) = %d", err_sparse_x));
+disp(sprintf("Curl_y error (sparse) = %d", err_sparse_y));
+disp(sprintf("Curl_z error (sparse) = %d", err_sparse_z));
+
+
+% spy curl matrix
+color_spy(curl_matrix(5,3,4));
+yline(61);
+yline(121);
+xline(61);
+xline(121);
