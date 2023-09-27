@@ -25,10 +25,10 @@ J = zeros(p.N,1);
 % simulation setup and initial conditions
 M = diag([ones(2*p.N, 1); zeros(p.N, 1); ones(2*p.N, 1)]);
 
-X0 = [1e-9*gaussian_start(1,100,400,500,p.N)'; 1e-9*gaussian_start(1,100,400,500,p.N)'; zeros(p.N,1); zeros(p.N,1); zeros(p.N,1)]; % V/m or A/m
+X0 = [1e-9*gaussian_start(1,100,400,500,p.N)'; -1e-9*gaussian_start(1,100,400,500,p.N)'; zeros(p.N,1); zeros(p.N,1); zeros(p.N,1)]; % V/m or A/m
 Xp0 = OneDimProblem(X0,J,p);
 X0(2*p.N+1:3*p.N) = Xp0(p.N+1:2*p.N);
-X0(3*p.N+1:4*p.N) = p.eps
+X0(3*p.N+1:4*p.N) = p.eps_0*p.chi_1*X0(p.N+1:2*p.N);
 X0(4*p.N+1:5*p.N) = Xp0(3*p.N+1:4*p.N);
 %X0([1 N N+1 2*N+1]) = 0;
 %X0 = [zeros(N,1) zeros(N,1) zeros(N,1) zeros(N,1) zeros(N,1)]; % V/m
