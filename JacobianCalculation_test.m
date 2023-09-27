@@ -3,7 +3,7 @@ close all
 clc
 
 % parameters 
-p.N = 4; % discretization
+p.N = 150; % discretization
 p.eps_0 =  8.85e-12; % F/m
 p.mu_0 = 1.26e-6; % N/A^2
 p.delta_x = 100e-9; % m

@@ -38,7 +38,7 @@ yyaxis right;
 plot(x*1e6, Xp0(p.N+1:2*p.N));
 legend("d_tH_y(x,0)", "d_tE_z(x,0)");
 
-tspan = linspace(0,100e-15,1001); % s
+tspan = linspace(0,100e-15,331); % s
 
 options = odeset('Mass',M,'MassSingular','no','RelTol',1e-3,'AbsTol',1e-6);
 
