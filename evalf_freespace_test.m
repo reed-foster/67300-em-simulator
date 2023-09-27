@@ -47,7 +47,6 @@ options = odeset('Mass',M,'MassSingular','no','RelTol',1e-3,'AbsTol',1e-6);
 H_t = X(:,1:p.N);
 E_t = X(:,p.N+1:2*p.N);
 
-dt = 1;
 figure(1);
 
 video = VideoWriter('evalf_freespace_test.avi'); %Create a video object
@@ -55,17 +54,17 @@ open(video); % Open video source - restricts the use of video for your program
 
 for i=1:size(tspan,2)
   yyaxis left;
-  plot(x*1e6, E_t(dt*(i-1)+1,:), '-o');
+  plot(x*1e6, E_t(i,:), '-o');
   ylabel("field [V/m]");
   ylim([-2 2]);
   yyaxis right;
-  plot(x*1e6, 1e3*H_t(dt*(i-1)+1,:), '-o');
+  plot(x*1e6, 1e3*H_t(i,:), '-o');
   ylim([-10 10]);
   ylabel("field [mA/m]");
   
   legend("E_z(x,0)", "H_y(x,0)");
   xlabel("x [um]");
-  title(sprintf("t = %d [ps]", tspan(dt*(i-1)+1)*1e12));
+  title(sprintf("t = %d [fs]", tspan(i)*1e15));
   drawnow;
   vidFrame = getframe(gcf);
   clf;

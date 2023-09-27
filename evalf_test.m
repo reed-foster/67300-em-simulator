@@ -23,28 +23,30 @@ P_dt = zeros(p.N,1); % first derivative of P
 J = zeros(p.N,1);
 
 % simulation setup and initial conditions
-M = diag([ones(2*p.N, 1); zeros(p.N, 1); ones(2*p.N, 1)]);
+M = sparse(diag([ones(2*p.N, 1); zeros(p.N, 1); ones(2*p.N, 1)]));
 
-X0 = [1e-9*gaussian_start(1,100,400,500,p.N)'; -1e-9*gaussian_start(1,100,400,500,p.N)'; zeros(p.N,1); zeros(p.N,1); zeros(p.N,1)]; % V/m or A/m
-Xp0 = OneDimProblem(X0,J,p);
-X0(2*p.N+1:3*p.N) = Xp0(p.N+1:2*p.N);
-X0(3*p.N+1:4*p.N) = p.eps_0*p.chi_1*X0(p.N+1:2*p.N);
-X0(4*p.N+1:5*p.N) = Xp0(3*p.N+1:4*p.N);
+X0 = [sqrt(p.eps_0/p.mu_0)*gaussian_start(1,100,400,100,p.N)'; -gaussian_start(1,100,400,100,p.N)'; zeros(p.N,1); zeros(p.N,1); zeros(p.N,1)]; % V/m or A/m
+Xp0 = evalf(X0,J,p);
+X0(3*p.N+1:4*p.N) = p.eps_0*p.chi_1*Xp0(p.N+1:2*p.N);
 %X0([1 N N+1 2*N+1]) = 0;
 %X0 = [zeros(N,1) zeros(N,1) zeros(N,1) zeros(N,1) zeros(N,1)]; % V/m
 tspan = linspace(0,1e-12,200); % s
 
-%implicitDAE = @(Xp) M*Xp - M*OneDimProblem(X0,J,p);
-%Xp = fsolve(implicitDAE, X0);
+evalf_implicit = @(t,X,Xp) M*Xp - evalf(X,J,p);
+
+Xp0 = X0;
+
+[X0,Xp0] = decic(evalf_implicit,0,X0,[],Xp0,[]);
 
 options = odeset('Mass',M,'MassSingular','yes','RelTol',1e-4,'AbsTol',1e-8);
+%options = odeset('Mass',M,'RelTol',1e-4,'AbsTol',1e-8);
 
-[t,X] = ode15s(@(t,X) OneDimProblem(X,J,p), tspan, X0, options);
+[t,X] = ode15i(evalf_implicit, tspan, X0, Xp0,options);
 
 H_t = X(:,1:p.N);
 E_t = X(:,p.N+1:2*p.N);
 
-x = linspace(0,(p.N-1)*delta_x,p.N);
+x = linspace(0,(p.N-1)*p.delta_x,p.N);
 for i=1:10
   figure(i);
   plot(x*1e6, E_t(20*(i-1)+1,:), '-o');
