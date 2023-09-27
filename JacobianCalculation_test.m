@@ -2,7 +2,7 @@ clear
 close all
 clc
 
-%parameters 
+% parameters 
 p.N = 4; % discretization
 p.eps_0 =  8.85e-12; % F/m
 p.mu_0 = 1.26e-6; % N/A^2
@@ -19,7 +19,7 @@ J = zeros(p.N,1);
 X0 = [sqrt(p.eps_0/p.mu_0)*gaussian_start(1,100,400,100,p.N)'; -gaussian_start(1,100,400,100,p.N)']; % V/m and A/m
 
 % change logarithmicly the step
-eps = logspace(10, -20, 10);
+eps = logspace(10, -20, 100);
 rel_err = zeros(length(eps), 1);
 
 % analytical jacobian
