@@ -1,4 +1,4 @@
-function dxdt = OneDimProblem(X,J,p)
+function dxdt = evalf(X,J,p)
     dxdt = zeros(5*p.N, 1);
     for i = 1:p.N
         % dHdt <- dXdt(1:N)
