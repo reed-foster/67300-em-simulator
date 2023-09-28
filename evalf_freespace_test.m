@@ -67,7 +67,9 @@ for i=1:size(tspan,2)
   title(sprintf("t = %d [fs]", tspan(i)*1e15));
   drawnow;
   vidFrame = getframe(gcf);
-  clf;
+  if i < size(tspan,2)
+    clf;
+  end
   writeVideo(video,vidFrame);
 end
 
