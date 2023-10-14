@@ -1,14 +1,14 @@
-function dxdt = evalf_nonlinear_wave_1D(X,dtJ,p)
+function dxdt = evalf_nonlinear_wave_1D(X,dtJ,params)
   % E_i = electric field at node i
   % dtE_i = time derivative of E_i
   % P_pi = pth-pole polarization response at node i
   % dtP_pi = time derivative of P_pi
-  % X = [E_1, dtE_1, P_11, dtP_11, P_21, dtP_21, P_31, dtP_31, ... E_2, dtE_2, P_12, dtP_12 ...]
-  % dtJ: input (time derivative of source term)
-  % p: parameters
+  % X = state variables (ordering set by p.x_order)
+  % dtJ = input (time derivative of source term)
+  % params = parameters
   %  N: number of points in space (number of nodes)
   %  dz: distance between points in space
-  %  P: matrix of pole parameters
+  %  Lorentz: matrix of pole parameters
   %   (delta_chi_1, delta_1, omega_1),
   %   (delta_chi_2, delta_2, omega_2),
   %   ...
@@ -16,28 +16,19 @@ function dxdt = evalf_nonlinear_wave_1D(X,dtJ,p)
   %  eps_0: vaccuum permittivity
   %  chi_2: second order (instantaneous) nonlinearity
   %  chi_3: third order (instantaneous) nonlinearity
+  %  x_order: 0 for default ordering above, 1 for ordering below
+  %   0:  [E_1, dtE_1, P_11, dtP_11, P_21, dtP_21, P_31, dtP_31, ... E_2, dtE_2, P_12, dtP_12 ...]
+  %   1:  [E_1, E_2, ... dtE_1, dtE_2, ... P_11, P_12, ... P_21, P_22, ... dtP_11, dtP_12, ... dtP_21, dtP_22]
 
-  num_poles = size(p.P, 1);
+  num_poles = size(params.Lorentz, 1);
   idx_step = 2*(1 + num_poles);
-  dxdt = zeros(p.N*idx_step, 1);
-  % get the offset into the state variable
-  E = X(1:idx_step:end); % Nx1
-  dtE = X(2:idx_step:end); % Nx1
-  P = zeros(num_poles, p.N); % PxN
-  dtP = zeros(num_poles, p.N); % PxN
-  for p = 1:num_poles
-    P(p) = X(3+2*(p-1):idx_step:end);
-    dtP(p) = X(4+2*(p-1):idx_step:end);
-  end
-
-  % e.g. with 3 poles
-  % X = [E_1, dtE_1, P_11, dtP_11, P_21, dtP_21, P_31, dtP_31, E_2, dtE_2, P_12, dtP_12 ...]
-  %      1    2      3     4       5     6       7     8       9    10     11    12
-  % idx_step = 2*(1 + 3) = 8;
+  dxdt = zeros(params.N*idx_step, 1);
+  % split up state variable X so we can do vectorized computation of dxdt
+  [E, dtE, P, dtP] = split_state_vector_nonlinear_wave_1D(X, params);
 
   % eqn 1: rank reduction (d/dt(E) = dtE);
   dxdt(1:idx_step:end) = dtE;
-  dtdtP = zeros(num_poles, p.N);
+  dtdtP = zeros(num_poles, params.N);
   for p = 1:num_poles
     % eqn 3: rank reduction (d/dt(P) = dtP);
     dxdt(3+2*(p-1):idx_step:end) = dtP(p);
