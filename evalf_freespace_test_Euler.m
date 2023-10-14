@@ -3,7 +3,7 @@ close all
 clc
 
 %parameters 
-p.N = 150; % discretization
+p.N = 1500; % discretization
 p.eps_0 =  8.85e-12; % F/m
 p.mu_0 = 1.26e-6; % N/A^2
 p.delta_x = 100e-9; % m
@@ -24,19 +24,19 @@ X0 = [sqrt(p.eps_0/p.mu_0)*gaussian_start(1,100,400,100,p.N)'; -gaussian_start(1
 
 Xp0 = evalf_freespace(X0,J,p);
 
-figure(2);
-subplot(2,1,1);
-yyaxis left;
-plot(x*1e6, X0(1:p.N));
-yyaxis right;
-plot(x*1e6, X0(p.N+1:2*p.N));
-legend("H_y(x,0)", "E_z(x,0)");
-subplot(2,1,2);
-yyaxis left;
-plot(x*1e6, Xp0(1:p.N));
-yyaxis right;
-plot(x*1e6, Xp0(p.N+1:2*p.N));
-legend("d_tH_y(x,0)", "d_tE_z(x,0)");
+%figure(2);
+%subplot(2,1,1);
+%yyaxis left;
+%plot(x*1e6, X0(1:p.N));
+%yyaxis right;
+%plot(x*1e6, X0(p.N+1:2*p.N));
+%legend("H_y(x,0)", "E_z(x,0)");
+%subplot(2,1,2);
+%yyaxis left;
+%plot(x*1e6, Xp0(1:p.N));
+%yyaxis right;
+%plot(x*1e6, Xp0(p.N+1:2*p.N));
+%legend("d_tH_y(x,0)", "d_tE_z(x,0)");
 
 tspan = linspace(0,100e-15,331); % s
 
@@ -46,13 +46,14 @@ tspan = linspace(0,100e-15,331); % s
 % [t,X] = ode45(@(t,X) evalf_freespace(X,J,p), tspan, X0, options);
 
 t_start = 0;
-t_stop = 1e-6;
-timestop = 10e-9;
+t_stop = 100e-15;
+timestep = 10e-18;
 
-[X,t] = ForwardEuler(evalf_freespace,X0,J,p,t_start,t_stop,timestep,0);
+[X,t] = ForwardEuler(@evalf_freespace,X0,J,p,t_start,t_stop,timestep,0);
 
-H_t = X(:,1:p.N);
-E_t = X(:,p.N+1:2*p.N);
+tspan = linspace(t_start, t_stop, size(X,2));
+H = X(1:p.N,:)';
+E = X(p.N+1:2*p.N,:)';
 
 figure(1);
 
@@ -61,11 +62,11 @@ open(video); % Open video source - restricts the use of video for your program
 
 for i=1:size(tspan,2)
   yyaxis left;
-  plot(x*1e6, E_t(i,:), '-o');
+  plot(x*1e6, E(i,:), '-o');
   ylabel("field [V/m]");
   ylim([-2 2]);
   yyaxis right;
-  plot(x*1e6, 1e3*H_t(i,:), '-o');
+  plot(x*1e6, 1e3*H(i,:), '-o');
   ylim([-10 10]);
   ylabel("field [mA/m]");
   

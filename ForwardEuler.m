@@ -5,8 +5,6 @@ function [X,t] = ForwardEuler(eval_f,x_start,J,p,t_start,t_stop,timestep,visuali
 % eval_f is a text string defining the name of the function that evaluates f(x,p,u)
 % visualize ~= 0 is an optional parameter triggering the generation of intermediate plots of the state
 % 
-% EXAMPLE
-% [X,t] = ForwardEuler(eval_f,x_start,p,t_start,t_stop,timestep,visualize)
 
 X(:,1) = x_start;
 t(1)   = t_start;
