@@ -1,4 +1,4 @@
-function dxdt = evalf_nonlinear_wave_1D(X,dtJ,params)
+function dxdt = nonlinear_f(X,dtJ,params)
   % E_i = electric field at node i
   % dtE_i = time derivative of E_i
   % P_pi = pth-pole polarization response at node i
@@ -24,22 +24,21 @@ function dxdt = evalf_nonlinear_wave_1D(X,dtJ,params)
   idx_step = 2*(1 + num_poles);
   dxdt = zeros(params.N*idx_step, 1);
   % split up state variable X so we can do vectorized computation of dxdt
-  [E, dtE, P, dtP] = split_state_vector_nonlinear_wave_1D(X, params);
+  [E, dtE, P, dtP] = nonlinear_split_X(X, params);
 
   % eqn 1: rank reduction (d/dt(E) = dtE);
-  dxdt(1:idx_step:end) = dtE;
   dtdtP = zeros(num_poles, params.N);
+  dchi_p = params.Lorentz(:,1);
+  delta_p = params.Lorentz(:,2);
+  omega_p = params.Lorentz(:,3);
   for p = 1:num_poles
-    % eqn 3: rank reduction (d/dt(P) = dtP);
-    dxdt(3+2*(p-1):idx_step:end) = dtP(p);
     % eqn 4: dispersive polarization response (d/dt(dtP) = omega^2*eps0*delta_chi*E - omega^2*P - delta*dtP)
-    dtdtP(p) = (p.P(p,3)^2*p.eps_0*p.P(p,1)).*E - (p.P(p,3)^2).*P(p) - (p.P(p,2)).*dtP(p);
-    dxdt(4+2*(p-1):idx_step:end) = dtdtP(p);
+    dtdtP(p,:) = (omega_p(p)^2*params.eps_0*dchi_p(p)).*E - (omega_p(p)^2).*P(p) - delta_p(p).*dtP(p);
   end
   % eqn 2: wave equation (d/dt(dtE) = 1/mu_0*(d/dz)(d/dz)E ...);
-  dxdt(2:idx_step:end) = (1/p.mu_0*del2(E,dz^2) ...
-                          - (2*p.eps_0).*(p.chi_2 + E.*(3*p.chi_3)).*(dtE.^2) ...
-                          - sum(dtdtP, 1) ...
-                          + dtJ) ./ (1 + (2*p.chi_2).*E + (3*p.chi_3).*(E.^2));
-  return dxdt;
+  dtdtE = 1/params.mu_0*del2(E,params.dz^2);
+  dtdtE = dtdtE - (2*params.eps_0).*(params.chi_2 + E.*(3*params.chi_3)).*(dtE.^2);
+  dtdtE = dtdtE - sum(dtdtP, 1)' + dtJ;
+  dtdtE = dtdtE ./ (1 + (2*params.chi_2).*E + (3*params.chi_3).*(E.^2));
+  dxdt = nonlinear_generate_X(dtE, dtdtE, dtP, dtdtP, params);
 end

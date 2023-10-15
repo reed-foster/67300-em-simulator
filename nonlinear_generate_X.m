@@ -1,4 +1,5 @@
-function X = generate_state_vector_nonlinear_wave_1D(E, dtE, P, dtP, p);
+function X = nonlinear_generate_X(E, dtE, P, dtP, params);
+  % TODO : vectorize and refactor so we have a separate function that generates the indices into the X vector
   % E_i = electric field at node i
   % dtE_i = time derivative of E_i
   % P_pi = pth-pole polarization response at node i
@@ -21,16 +22,15 @@ function X = generate_state_vector_nonlinear_wave_1D(E, dtE, P, dtP, p);
     X(1:idx_step:end) = E;
     X(2:idx_step:end) = dtE;
     for p = 1:num_poles
-      X(3+2*(p-1):idx_step:end) = P(p);
-      X(4+2*(p-1):idx_step:end) = dtP(p);
+      X(3+2*(p-1):idx_step:end) = P(p,:);
+      X(4+2*(p-1):idx_step:end) = dtP(p,:);
     end
   else
-    X(1:p.N) = E;
-    X(p.N+1:2*p.N) = dtE;
+    X(1:params.N) = E;
+    X(params.N+1:2*params.N) = dtE;
     for p = 1:num_poles
-      X(2*p.N+1 + p.N*(p-1):2*p.N + p.N*p) = P(p);
-      X(p.N*(2+num_poles)+1 + p.N*(p-1):p.N*(2+num_poles) + p.N*p) = dtP(p);
+      X(2*params.N+1 + params.N*(p-1):2*params.N + params.N*p) = P(p,:);
+      X(params.N*(2+num_poles)+1 + params.N*(p-1):params.N*(2+num_poles) + params.N*p) = dtP(p,:);
     end
   end
-  return X;
 end
