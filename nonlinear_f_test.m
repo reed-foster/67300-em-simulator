@@ -9,17 +9,14 @@ plot_permittivity(params);
 
 % source 
 dt = params.dz/3e8; %50e-18; % s
-tf = 700e-15; % s
+tf = 500e-15; % s
 tsteps = round(tf/dt);
 tspan = linspace(0,(tsteps-1)*dt,tsteps); % s
 J = zeros(params.N,tsteps);
 dtJ = zeros(params.N,tsteps);
 
-%omega_J = 2*pi*6.5e13; % Hz
-omega_J = 2*pi*3e8/(1.55e-6*5); %2*pi*1e13; % Hz
-%dtJ_exp = 1e12*(exp(-(tspan-3/omega_J).^2/(2*(1/omega_J)^2)) - exp(-(tspan-7/omega_J).^2/(2*(1/omega_J)^2)));
-%dtJ_cos = 1e7/params.dz*omega_J*cos(omega_J*tspan).*exp(-(tspan-4*pi/omega_J).^2./(2*(pi/omega_J)^2));
-dtJ_ricker = 5e7/params.dz*omega_J*(1-((tspan-2*pi/omega_J)*omega_J).^2).*exp(-(tspan-2*pi/omega_J).^2/(2*(1/omega_J)^2));
+omega_J = 2*pi*3e8/(1.55e-6*3); % angular frequency for 1.55um
+dtJ_ricker = 2e8/params.dz*omega_J*(1-((tspan-2*pi/omega_J)*omega_J).^2).*exp(-(tspan-2*pi/omega_J).^2/(2*(1/omega_J)^2));
 dtJ(round(params.N/2),:) = dtJ_ricker;
 %figure(4);
 %plot(tspan, dtJ(round(params.N/2),:), '-o');
@@ -61,50 +58,53 @@ if gen_video
   video = VideoWriter('nonlinear_f_test.avi'); %Create a video object
   open(video); % Open video source - restricts the use of video for your program
   
-  i_list = 1:round(size(tspan,2)/100):size(tspan,2);
+  i_list = 1:round(size(tspan,2)/200):size(tspan,2);
+  E_scale = 1/1e9; % V/nm
+  D_scale = 1e12/1e12; % pC/um^2
+  w = round(2.5*2*pi*3e8/(omega_J*3)/params.dz);
+  [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(round(2*2*pi/omega_J/dt),:)',params);
+  m_E = 1.1*max(abs(E))*E_scale;
+  m_D = 1.1*max(abs(D))*D_scale;
+  if (m_E == 0); m_E = 1; end
+  if (m_D == 0); m_D = 1; end
   for i=i_list
     [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(i,:)',params);
-    if plot_all
-      subplot(3,1,1);
-      yyaxis left;
-      plot(x*1e6, E, '-o');
-      ylabel("field [V/m]");
-      yyaxis right;
-      plot(x*1e6, D, '-o');
-      ylabel("displacement [C/m^2]");
-      legend("E_x(z,t)", "D_x(z,t)");
-  
-      subplot(3,1,2);
-      yyaxis left;
-      plot(x*1e6, dtE, '-o');
-      ylabel("d/dt field [V/m/s]");
-      yyaxis right;
-      plot(x*1e6, dtD, '-o');
-      ylabel("d/dt displacement [C/m^2/s]");
-      legend("dtE_x(z,t)", "dtD_x(z,t)");
-  
-      subplot(3,1,3);
-      yyaxis left;
-      plot(x*1e6, P, '-o');
-      ylabel("polarization [C/m^2]");
-      yyaxis right;
-      plot(x*1e6, dtP, '-o');
-      ylabel("d/dt polarization [C/m^2/s]");
-      legend("P_x(z,t)", "dtP_x(z,t)");
-    else
-      yyaxis left;
-      plot(x*1e6, E/1e9, '-o');
-      ylabel("field [V/nm]");
-      ylim([-5 5]);
-      yyaxis right;
-      plot(x*1e6, D*1e12/1e12, '-o');
-      ylabel("displacement [pC/um^2]");
-      ylim([-1 1]);
-      legend("E_x(z,t)", "D_x(z,t)");
-    end
+    subplot(2,1,1);
+    yyaxis left;
+    plot(x*1e6, E*E_scale, '-o');
+    ylabel("field [V/nm]");
+    ylim([-m_E m_E]);
+    yyaxis right;
+    plot(x*1e6, D*D_scale, '-o');
+    ylabel("displacement [pC/um^2]");
+    ylim([-m_D m_D]);
+    legend("E_x(z,t)", "D_x(z,t)");
+    title(sprintf("t = %0.3f [fs]", tspan(i)*1e15));
+
+    subplot(2,1,2);
+    % zoom in on the forward-propagating pulse
+    yyaxis left;
+    [~,n0] = max(E(round(params.N/2):end));
+    n0 = n0 + round(params.N/2) + round(w/2);
+    xzoom = n0*params.dz+x(n0-w:n0+w); % m
+    Ezoom = E(n0-w:n0+w);
+    Dzoom = D(n0-w:n0+w);
+    m_Ezoom = 1.5*max(abs(Ezoom))*E_scale;
+    m_Dzoom = 1.5*max(abs(Dzoom))*D_scale;
+    if (m_Ezoom == 0); m_Ezoom = 1; end
+    if (m_Dzoom == 0); m_Dzoom = 1; end
+    plot(xzoom*1e6, Ezoom*E_scale, '-o');
+    ylabel("field [V/nm]");
+    ylim([-m_Ezoom m_Ezoom]);
+    xlim([xzoom(1)*1e6, xzoom(end)*1e6]);
+    yyaxis right;
+    plot(xzoom*1e6, Dzoom*D_scale, '-o');
+    ylabel("displacement [pC/um^2]");
+    ylim([-m_Dzoom m_Dzoom]);
+    xlim([xzoom(1)*1e6, xzoom(end)*1e6]);
+    legend("E_x(z,t)", "D_x(z,t)");
     
     xlabel("x [um]");
-    title(sprintf("t = %0.3f [fs]", tspan(i)*1e15));
     drawnow;
     vidFrame = getframe(gcf);
     %if i < i_list(end);

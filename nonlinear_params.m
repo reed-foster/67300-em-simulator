@@ -18,10 +18,9 @@ function params = nonlinear_params;
   params.eps_0 =  8.85e-12; % F/m
   params.mu_0 = 1.26e-6; % N/A^2
   params.chi_2 = 41.7e-12; % m/V Laboratory for Nanoscale Optics, John A. Paulson School of Engineering and Applied Sciences, Harvard University
-  %params.chi_3 = 1.5e-20; % m^2/V^2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/pssb.202200453 
-  params.chi_3 = 1.5e-24; % m^2/V^2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/pssb.202200453 
+  params.chi_3 = 1.5e-20; % m^2/V^2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/pssb.202200453 
   params.Lorentz = [4 2*pi*1e10 2*pi*1e11; ...
-                    2 2*pi*1e13 2*pi*3e14]; % arbitrary
+                    2 2*pi*9e13 2*pi*3e14]; % arbitrary
   params.dz = 50e-9; % m
   params.x_order = 0;
 end
