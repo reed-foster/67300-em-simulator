@@ -14,14 +14,15 @@ function params = nonlinear_params;
   %   0:  [E_1, dtE_1, P_11, dtP_11, P_21, dtP_21, P_31, dtP_31, ... E_2, dtE_2, P_12, dtP_12 ...]
   %   1:  [E_1, E_2, ... dtE_1, dtE_2, ... P_11, P_12, ... P_21, P_22, ... dtP_11, dtP_12, ... dtP_21, dtP_22]
 
-  params.N = 1000; % discretization
+  params.N = 4000; % discretization
   params.eps_0 =  8.85e-12; % F/m
   params.mu_0 = 1.26e-6; % N/A^2
   %params.chi_2 = 41.7e-12; % m/V Laboratory for Nanoscale Optics, John A. Paulson School of Engineering and Applied Sciences, Harvard University
   params.chi_2 = 0;
   %params.chi_3 = 1.5e-20; % m^2/V^2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/pssb.202200453 
   params.chi_3 = 0;
-  params.Lorentz = [4 2*pi*1e11 2*pi*1e12];
+  %params.Lorentz = [4 2*pi*1e12 2*pi*1e13];
+  params.Lorentz = [4 2*pi*9e18 2*pi*1e15];
   %params.Lorentz = [4 2*pi*1e10 2*pi*1e11; ...
   %                  2 2*pi*1e15 2*pi*1e16]; % arbitrary
   params.dz = 50e-9; % m

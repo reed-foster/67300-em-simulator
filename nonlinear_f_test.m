@@ -4,16 +4,17 @@ close all
 params = nonlinear_params();
 
 % source 
-dt = 2e-18; % s
-tf = 100e-15; % s
+dt = 1e-18; % s
+tf = 40e-15; % s
 tsteps = round(tf/dt);
 tspan = linspace(0,(tsteps-1)*dt,tsteps); % s
 J = zeros(params.N,tsteps);
 dtJ = zeros(params.N,tsteps);
 
-omega_J = 2*pi*6.5e13; % Hz
+%omega_J = 2*pi*6.5e13; % Hz
+omega_J = 2*pi*1e14; % Hz
 %dtJ_exp = 1e12*(exp(-(tspan-3/omega_J).^2/(2*(1/omega_J)^2)) - exp(-(tspan-7/omega_J).^2/(2*(1/omega_J)^2)));
-dtJ_dipole = 1e3*omega_J*cos(omega_J*tspan).*exp(-(tspan-4*pi/omega_J).^2./(2*(pi/omega_J)^2));
+dtJ_dipole = 1e-6*omega_J*cos(omega_J*tspan).*exp(-(tspan-4*pi/omega_J).^2./(2*(pi/omega_J)^2));
 dtJ(round(params.N/2),:) = dtJ_dipole;
 %plot(tspan, dtJ(round(params.N/2),:), '-o');
 %return;
@@ -36,54 +37,88 @@ X0 = nonlinear_generate_X(E0, dtE0, P0, dtP0, params);
 
 %disp_progress = @(t,y,flag)fprintf('t= %s \n',mat2str(t))*0;
 %options = odeset('RelTol',1e-3,'AbsTol',1e-6,'OutputFcn',disp_progress);
-options = odeset('RelTol',1e-3,'AbsTol',1e-6);
+%options = odeset('RelTol',1e-6,'AbsTol',1e-24);
+options = odeset('RelTol',1e-3,'AbsTol',1e-12);
 
 [t,X] = ode45(@(t,X) nonlinear_f(X,dtJ(:,round(t/dt+0.5)),params), tspan, X0, options);
 
-figure(1);
+dxdt_end = nonlinear_f(X(end,:)', 0, params);
+X_end = X(end,:);
+[dtE_end, dtdtE_end, dtP_end, dtdtP_end] = nonlinear_split_X(dxdt_end, params);
+[E_end, ~, P_end, ~] = nonlinear_split_X(X_end, params);
 
-video = VideoWriter('nonlinear_f_test.avi'); %Create a video object
-open(video); % Open video source - restricts the use of video for your program
-
-i_list = 1:round(size(tspan,2)/100):size(tspan,2);
-for i=i_list
-  [E, D, dtE, dtD] = nonlinear_u(X(i,:)',params);
-  subplot(2,1,1);
-  yyaxis left;
-  %plot(x*1e6, E/1e9, '-o');
-  plot(x*1e6, E, '-o');
-  ylabel("field [V/m]");
-  %ylim([-0.2 0.2]);
-  yyaxis right;
-  %plot(x*1e6, D*1e3, '-o');
-  %ylabel("displacement [nC/um^2]");
-  plot(x*1e6, D, '-o');
-  ylabel("displacement [C/m^2]");
-  %ylim([-5 5]);
-
-  subplot(2,1,2);
-  yyaxis left;
-  %plot(x*1e6, dtE/1e9/1e15, '-o');
-  %ylabel("d/dt field [V/nm/fs]");
-  plot(x*1e6, dtE, '-o');
-  ylabel("d/dt field [V/m/s]");
-  %ylim([-50 50]);
-  yyaxis right;
-  %plot(x*1e6, dtD*1e3/1e15, '-o');
-  %ylabel("d/dt displacement [nC/um^2/fs]");
-  plot(x*1e6, dtD, '-o');
-  ylabel("d/dt displacement [C/m^2/s]");
-  %ylim([-0.5 0.5]);
+gen_video = true;
+if gen_video
+  figure(1);
   
-  legend("E_x(z,t)", "D_x(z,t)");
-  xlabel("x [um]");
-  title(sprintf("t = %0.3f [fs]", tspan(i)*1e15));
-  drawnow;
-  vidFrame = getframe(gcf);
-  if i < i_list(end);
-    clf;
+  video = VideoWriter('nonlinear_f_test.avi'); %Create a video object
+  open(video); % Open video source - restricts the use of video for your program
+  
+  i_list = 1:round(size(tspan,2)/50):size(tspan,2);
+  for i=i_list
+    [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(i,:)',params);
+    subplot(3,1,1);
+    yyaxis left;
+    %plot(x*1e6, E/1e9, '-o');
+    plot(x*1e6, E, '-o');
+    ylabel("field [V/m]");
+    %ylim([-0.2 0.2]);
+    yyaxis right;
+    %plot(x*1e6, D*1e3, '-o');
+    %ylabel("displacement [nC/um^2]");
+    plot(x*1e6, D, '-o');
+    ylabel("displacement [C/m^2]");
+    %ylim([-5 5]);
+    legend("E_x(z,t)", "D_x(z,t)");
+  
+    subplot(3,1,2);
+    yyaxis left;
+    %plot(x*1e6, dtE/1e9/1e15, '-o');
+    %ylabel("d/dt field [V/nm/fs]");
+    plot(x*1e6, dtE, '-o');
+    ylabel("d/dt field [V/m/s]");
+    %ylim([-50 50]);
+    yyaxis right;
+    %plot(x*1e6, dtD*1e3/1e15, '-o');
+    %ylabel("d/dt displacement [nC/um^2/fs]");
+    plot(x*1e6, dtD, '-o');
+    ylabel("d/dt displacement [C/m^2/s]");
+    %ylim([-0.5 0.5]);
+    legend("dtE_x(z,t)", "dtD_x(z,t)");
+  
+    subplot(3,1,3);
+    yyaxis left;
+    %plot(x*1e6, dtE/1e9/1e15, '-o');
+    %ylabel("d/dt field [V/nm/fs]");
+    plot(x*1e6, P, '-o');
+    ylabel("polarization [C/m^2]");
+    %ylim([-50 50]);
+    yyaxis right;
+    %plot(x*1e6, dtD*1e3/1e15, '-o');
+    %ylabel("d/dt displacement [nC/um^2/fs]");
+    plot(x*1e6, dtP, '-o');
+    ylabel("d/dt polarization [C/m^2/s]");
+    %ylim([-0.5 0.5]);
+    legend("P_x(z,t)", "dtP_x(z,t)");
+    
+    xlabel("x [um]");
+    title(sprintf("t = %0.3f [fs]", tspan(i)*1e15));
+    drawnow;
+    vidFrame = getframe(gcf);
+    if i < i_list(end);
+      clf;
+    end
+    writeVideo(video,vidFrame);
   end
-  writeVideo(video,vidFrame);
+  
+  close(video);
+else
+  figure;
+  yyaxis left; plot(dtdtP_end); yyaxis right; plot(dtP_end);
 end
-
-close(video);
+figure;
+semilogy(E_end*4*params.eps_0*params.Lorentz(1,3)^2);
+hold on;
+semilogy(P_end*params.Lorentz(1,3)^2);
+semilogy(params.Lorentz(1,2)*dtP_end);
+legend("E*4*eps0*omega_p^2", "P*omega_p^2", "dtP*delta_p");

@@ -1,4 +1,4 @@
-function [E, D, dtE, dtD] = nonlinear_u(X,params);
+function [E, D, dtE, dtD, P, dtP] = nonlinear_u(X,params);
   % E_i = electric field at node i
   % dtE_i = time derivative of E_i
   % P_pi = pth-pole polarization response at node i
