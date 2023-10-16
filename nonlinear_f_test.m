@@ -18,7 +18,7 @@ dtJ = zeros(params.N,tsteps);
 %omega_J = 2*pi*6.5e13; % Hz
 omega_J = 2*pi*3e8/(1.55e-6*5); %2*pi*1e13; % Hz
 %dtJ_exp = 1e12*(exp(-(tspan-3/omega_J).^2/(2*(1/omega_J)^2)) - exp(-(tspan-7/omega_J).^2/(2*(1/omega_J)^2)));
-dtJ_dipole = 1e9*omega_J*cos(omega_J*tspan).*exp(-(tspan-4*pi/omega_J).^2./(2*(pi/omega_J)^2));
+dtJ_dipole = 1e7/params.dz*omega_J*cos(omega_J*tspan).*exp(-(tspan-4*pi/omega_J).^2./(2*(pi/omega_J)^2));
 dtJ(round(params.N/2),:) = dtJ_dipole;
 %plot(tspan, dtJ(round(params.N/2),:), '-o');
 %return;
@@ -91,13 +91,13 @@ if gen_video
       legend("P_x(z,t)", "dtP_x(z,t)");
     else
       yyaxis left;
-      plot(x*1e6, E, '-o');
-      ylabel("field [V/m]");
-      ylim([-1500 1500]);
+      plot(x*1e6, E/1e9, '-o');
+      ylabel("field [V/nm]");
+      ylim([-5 5]);
       yyaxis right;
-      plot(x*1e6, D*1e9, '-o');
-      ylabel("displacement [nC/m^2]");
-      ylim([-40 40]);
+      plot(x*1e6, D*1e12/1e12, '-o');
+      ylabel("displacement [pC/um^2]");
+      ylim([-1 1]);
       legend("E_x(z,t)", "D_x(z,t)");
     end
     
@@ -116,9 +116,3 @@ else
   figure(1);
   yyaxis left; plot(dtdtP_end); yyaxis right; plot(dtP_end);
 end
-figure(2);
-semilogy(E_end*4*params.eps_0*params.Lorentz(1,3)^2);
-hold on;
-semilogy(P_end*params.Lorentz(1,3)^2);
-semilogy(params.Lorentz(1,2)*dtP_end);
-legend("E*4*eps0*omega_p^2", "P*omega_p^2", "dtP*delta_p");
