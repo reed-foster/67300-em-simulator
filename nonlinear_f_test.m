@@ -9,7 +9,7 @@ plot_permittivity(params);
 
 % source 
 dt = params.dz/3e8; %50e-18; % s
-tf = 200e-15; % s
+tf = 700e-15; % s
 tsteps = round(tf/dt);
 tspan = linspace(0,(tsteps-1)*dt,tsteps); % s
 J = zeros(params.N,tsteps);
@@ -18,8 +18,10 @@ dtJ = zeros(params.N,tsteps);
 %omega_J = 2*pi*6.5e13; % Hz
 omega_J = 2*pi*3e8/(1.55e-6*5); %2*pi*1e13; % Hz
 %dtJ_exp = 1e12*(exp(-(tspan-3/omega_J).^2/(2*(1/omega_J)^2)) - exp(-(tspan-7/omega_J).^2/(2*(1/omega_J)^2)));
-dtJ_dipole = 1e7/params.dz*omega_J*cos(omega_J*tspan).*exp(-(tspan-4*pi/omega_J).^2./(2*(pi/omega_J)^2));
-dtJ(round(params.N/2),:) = dtJ_dipole;
+%dtJ_cos = 1e7/params.dz*omega_J*cos(omega_J*tspan).*exp(-(tspan-4*pi/omega_J).^2./(2*(pi/omega_J)^2));
+dtJ_ricker = 5e7/params.dz*omega_J*(1-((tspan-2*pi/omega_J)*omega_J).^2).*exp(-(tspan-2*pi/omega_J).^2/(2*(1/omega_J)^2));
+dtJ(round(params.N/2),:) = dtJ_ricker;
+%figure(4);
 %plot(tspan, dtJ(round(params.N/2),:), '-o');
 %return;
 
