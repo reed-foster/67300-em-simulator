@@ -33,14 +33,13 @@ function dxdt = nonlinear_f(X,dtJ,params)
   omega_p = params.Lorentz(:,3);
   for p = 1:num_poles
     % eqn 4: dispersive polarization response (d/dt(dtP) = omega^2*eps0*delta_chi*E - omega^2*P - delta*dtP)
-    dtdtP(p,:) = omega_p(p)^2*params.eps_0*dchi_p(p)*E - omega_p(p)^2*P(p) - delta_p(p)*dtP(p);
+    dtdtP(p,:) = omega_p(p)^2*(params.eps_0*dchi_p(p)*E' - P(p,:) - (delta_p(p)/omega_p(p)^2)*dtP(p,:));
   end
-  %disp(max(sum(dtdtP, 1), [], 'all'));
   % eqn 2: wave equation (d/dt(dtE) = 1/mu_0*(d/dz)(d/dz)E ...);
   dtdtE = 1/params.mu_0*del2(E,params.dz);
-  %dtdtE = dtdtE + dtJ;
-  %dtdtE = dtdtE - (2*params.eps_0).*(params.chi_2 + E.*(3*params.chi_3)).*(dtE.^2);
+  dtdtE = dtdtE - (2*params.eps_0).*(params.chi_2 + E.*(3*params.chi_3)).*(dtE.^2);
   dtdtE = dtdtE - sum(dtdtP, 1)' + dtJ;
+  %dtdtE = dtdtE + dtJ;
   dtdtE = dtdtE ./ (params.eps_0*(1 + (2*params.chi_2).*E + (3*params.chi_3).*(E.^2)));
   dxdt = nonlinear_generate_X(dtE, dtdtE, dtP, dtdtP, params);
 end
