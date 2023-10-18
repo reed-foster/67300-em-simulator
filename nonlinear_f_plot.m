@@ -22,15 +22,15 @@ function nonlinear_f_plot(x, tspan, X, params, zoom_width, gen_video, plot_jacob
   w = round(zoom_width/params.dz);
   m_E = 0;
   m_D = 0;
-  for i=1:size(X,1)
-    [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(i,:)',params);
+  for i=1:size(X,2)
+    [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(:,i),params);
     m_E = max(1.1*max(abs(E))*E_scale, m_E);
     m_D = max(1.1*max(abs(D))*D_scale, m_D);
   end
   if (m_E == 0); m_E = 1; end
   if (m_D == 0); m_D = 1; end
   for i=i_list
-    [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(i,:)',params);
+    [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(:,i),params);
     yyaxis(ax_ED, 'left');
     plot(ax_ED, x*1e6, E*E_scale, '-o');
     ylabel(ax_ED, "field [V/nm]");
@@ -72,7 +72,7 @@ function nonlinear_f_plot(x, tspan, X, params, zoom_width, gen_video, plot_jacob
   
     if (plot_jacobian)
       eps_J = 1e-4;
-      J_f = JacobianCalculation(@(X) nonlinear_f(X,dtJ(:,i),params), X(i,:)', eps_J, size(X,2));
+      J_f = JacobianCalculation(@(X) nonlinear_f(X,dtJ(:,i),params), X(:,i), eps_J, size(X,1));
       set(gcf, 'CurrentAxes', ax_J);
       cla(ax_J);
       spy(J_f > 0, 'r');

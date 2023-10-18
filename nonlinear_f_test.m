@@ -39,4 +39,4 @@ plot_jacobian = false;
 x = linspace(0,(params.N-1)*params.dz,params.N); % m
 zoom_width = 10e-6; % m
 frame_dec = 10;
-nonlinear_f_plot(x, tspan, X, params, zoom_width, gen_video, plot_jacobian, frame_dec, 'nonlinear_f_test.avi');
+nonlinear_f_plot(x, tspan, X', params, zoom_width, gen_video, plot_jacobian, frame_dec, 'nonlinear_f_test.avi');
