@@ -14,7 +14,7 @@ x = linspace(0,(params.N-1)*params.dz,params.N); % m
 
 t_start = 0;
 t_stop = 80e-15;
-dt = 1e-18;
+dt = 1e-18; % min 1e-18 max 5e18
 tsteps = round(t_stop/dt);
 tspan = linspace(0,(tsteps-1)*dt,tsteps); % s
 
