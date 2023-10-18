@@ -31,7 +31,7 @@ plot_all = false;
 if gen_video
   figure(1);
   
-  video = VideoWriter('evalf_nonliear_wave_1D_test_Euler.avi'); %Create a video object
+  video = VideoWriter('nonlinear_f_test_euler.avi'); %Create a video object
   open(video); % Open video source - restricts the use of video for your program
   
   i_list = 1:round(size(tspan,2)/200):size(tspan,2);
