@@ -2,10 +2,6 @@ close all
 
 params = nonlinear_params();
 
-%parameters 
-params.N = 2000; % discretization
-params.delta_x = 100e-9; % m
-
 % nodal variables
 E0 = zeros(params.N,1);
 dtE0 = zeros(params.N, 1);
@@ -14,22 +10,21 @@ dtP0 = zeros(size(params.Lorentz, 1), params.N);
 X0 = nonlinear_generate_X(E0, dtE0, P0, dtP0, params);
 
 % simulation setup and initial conditions
-x = linspace(0,(params.N-1)*params.delta_x,params.N); % m
+x = linspace(0,(params.N-1)*params.dz,params.N); % m
 
 t_start = 0;
 t_stop = 80e-15;
-timestep = 10e-18;
-dt = timestep;
-tsteps = round(t_stop/timestep);
+dt = 1e-18;
+tsteps = round(t_stop/dt);
 tspan = linspace(0,(tsteps-1)*dt,tsteps); % s
 
 % source 
-dtJ = zeros(params.N,round((t_stop-t_start)/timestep));
+dtJ = zeros(params.N,tsteps);
 omega_J = 2*pi*3e8/(1.55e-6*3); % angular frequency for 1.55um
 t0_J = 1.5*2*pi/omega_J;
-dtJ(round(params.N/2),:) = ricker(2e8/params.delta_x*omega_J, omega_J, tsteps, timestep, t0_J);
+dtJ(round(params.N/2),:) = ricker(2e8/params.dz*omega_J, omega_J, tsteps, dt, t0_J);
 
-[X,t] = ForwardEuler(@nonlinear_f, X0, dtJ, params, t_start,t_stop,timestep,0);
+[X,t] = ForwardEuler(@nonlinear_f, X0, dtJ, params, t_start, t_stop, dt, 0);
 
 gen_video = true;
 plot_all = false;
