@@ -21,6 +21,6 @@ function params = nonlinear_params;
   params.chi_3 = 1.5e-20; % m^2/V^2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/pssb.202200453 
   params.Lorentz = [4 2*pi*1e10 2*pi*1e11; ...
                     2 2*pi*9e13 2*pi*3e14]; % arbitrary
-  params.dz = 150e-9; % m
+  params.dz = 100e-9; % m
   params.x_order = 0;
 end
