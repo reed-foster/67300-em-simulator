@@ -27,11 +27,6 @@ dtJ(round(params.N/2),:) = ricker(2e8/params.dz*omega_J, omega_J, tsteps, dt, t0
 % simulation setup and initial conditions
 x = linspace(0,(params.N-1)*params.dz,params.N); % m
 
-%E0 = gaussian_start(2e8, 1e-6, 5e-6, 1.55e-6, params.N, params.dz, 0);
-%dtE0 = gaussian_start(2e8*1.5e17, 1e-6, 5e-6, 1.55e-6, params.N, params.dz, pi/2);
-%P0 = params.eps_0*params.Lorentz(:,1)*E0;
-%dtP0 = zeros(size(params.Lorentz,1), params.N);
-
 E0 = zeros(params.N,1);
 dtE0 = zeros(params.N, 1);
 P0 = zeros(size(params.Lorentz,1), params.N);
@@ -39,13 +34,10 @@ dtP0 = zeros(size(params.Lorentz,1), params.N);
 
 X0 = nonlinear_generate_X(E0, dtE0, P0, dtP0, params);
 
-
-%disp_progress = @(t,y,flag)fprintf('t= %s \n',mat2str(t))*0;
-%options = odeset('RelTol',1e-3,'AbsTol',1e-6,'OutputFcn',disp_progress);
-%options = odeset('RelTol',1e-6,'AbsTol',1e-24);
 options = odeset('RelTol',1e-3,'AbsTol',1e-12);
 
-[t,X] = ode45(@(t,X) nonlinear_f(X,dtJ(:,round(t/dt+0.5)),params), tspan, X0, options);
+eval_f = @(t,X) nonlinear_f(X,dtJ(:,round(t/dt+0.5)),params);
+[t,X] = ode45(eval_f, tspan, X0, options);
 
 dxdt_end = nonlinear_f(X(end,:)', 0, params);
 X_end = X(end,:);
