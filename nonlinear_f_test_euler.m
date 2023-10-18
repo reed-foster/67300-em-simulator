@@ -22,7 +22,8 @@ tspan = linspace(0,(tsteps-1)*dt,tsteps); % s
 dtJ = zeros(params.N,tsteps);
 omega_J = 2*pi*3e8/(1.55e-6*3); % angular frequency for 1.55um
 t0_J = 1.5*2*pi/omega_J;
-dtJ(round(params.N/2),:) = ricker(2e8/params.dz*omega_J, omega_J, tsteps, dt, t0_J);
+ampl = 1e6; % also try 1e7, 1e6, 1e5
+dtJ(round(params.N/2),:) = ricker(ampl/params.dz*omega_J, omega_J, tsteps, dt, t0_J);
 
 [X,t] = ForwardEuler(@nonlinear_f, X0, dtJ, params, t_start, t_stop, dt, 0);
 
@@ -31,7 +32,7 @@ plot_all = false;
 if gen_video
   figure(1);
   
-  video = VideoWriter('nonlinear_f_test_euler.avi'); %Create a video object
+  video = VideoWriter('nonlinear_f_test_euler_ampl1e6.avi'); %Create a video object
   open(video); % Open video source - restricts the use of video for your program
   
   i_list = 1:round(size(tspan,2)/200):size(tspan,2);
