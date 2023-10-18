@@ -2,6 +2,7 @@ clear all
 close all
 
 params = nonlinear_params();
+params.N = 2000;
 
 %figure(3);
 %plot_permittivity(params);
@@ -9,7 +10,7 @@ params = nonlinear_params();
 
 % source 
 dt = params.dz/3e8; %50e-18; % s
-tf = 50e-15; % s
+tf = 300e-15; % s
 tsteps = round(tf/dt);
 tspan = linspace(0,(tsteps-1)*dt,tsteps); % s
 J = zeros(params.N,tsteps);
@@ -37,20 +38,23 @@ options = odeset('RelTol',1e-3,'AbsTol',1e-12);
 eval_f = @(t,X) nonlinear_f(X,dtJ(:,round(t/dt+0.5)),params);
 [t,X] = ode45(eval_f, tspan, X0, options);
 
-dxdt_end = nonlinear_f(X(end,:)', 0, params);
-X_end = X(end,:);
-[dtE_end, dtdtE_end, dtP_end, dtdtP_end] = nonlinear_split_X(dxdt_end, params);
-[E_end, ~, P_end, ~] = nonlinear_split_X(X_end, params);
-
 gen_video = true;
 plot_all = false;
+plot_jacobian = false;
 if gen_video
   f = figure(1);
-  set(f, 'resize', 'off', 'Position', [100 100 800 300]);
-  tiledlayout(2,7);
-  ax_ED = nexttile(1, [1 4]);
-  ax_dtEdtD = nexttile(8, [1 4]);
-  ax_J = nexttile(5, [2 3]);
+  if plot_jacobian
+    set(f, 'resize', 'off', 'Position', [100 100 800 300]);
+    tiledlayout(2,7);
+    ax_ED = nexttile(1, [1 4]);
+    ax_dtEdtD = nexttile(8, [1 4]);
+    ax_J = nexttile(5, [2 3]);
+  else
+    set(f, 'resize', 'off', 'Position', [100 100 1380 820]);
+    tiledlayout(2,1);
+    ax_ED = nexttile(1);
+    ax_dtEdtD = nexttile(2);
+  end
   
   video = VideoWriter('nonlinear_f_test.avi'); %Create a video object
   open(video); % Open video source - restricts the use of video for your program
@@ -105,20 +109,19 @@ if gen_video
     
     xlabel(ax_dtEdtD, "x [um]");
 
-
-    eps_J = 1e-4;
-    J_f = JacobianCalculation(@(X) nonlinear_f(X,dtJ(:,i),params), X(i,:)', eps_J, size(X,2));
-    set(gcf, 'CurrentAxes', ax_J);
-    spy(J_f > 0, 'r');
-    hold on;
-    spy(J_f < 0, 'b');
-    title(ax_J, sprintf("Jacobian (eps = %1.1e, x_{order} = %i)", eps_J, params.x_order));
+    if (plot_jacobian)
+      eps_J = 1e-4;
+      J_f = JacobianCalculation(@(X) nonlinear_f(X,dtJ(:,i),params), X(i,:)', eps_J, size(X,2));
+      set(gcf, 'CurrentAxes', ax_J);
+      cla(ax_J);
+      spy(J_f > 0, 'r');
+      hold on;
+      spy(J_f < 0, 'b');
+      title(ax_J, sprintf("Jacobian (eps = %1.1e, x_{order} = %i)", eps_J, params.x_order));
+    end
 
     drawnow;
     vidFrame = getframe(gcf);
-    %if i < i_list(end);
-    %  clf;
-    %end
     writeVideo(video,vidFrame);
   end
   
