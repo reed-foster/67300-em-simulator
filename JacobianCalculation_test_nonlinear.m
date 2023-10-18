@@ -3,6 +3,7 @@ close all
 
 params = nonlinear_params();
 params.x_order = 0;
+params.N = 100;
 
 % source 
 dt = params.dz/3e8; %50e-18; % s
