@@ -3,7 +3,7 @@ close all
 clc
 
 % parameters 
-p.N = 25; % discretization
+p.N = 250; % discretization
 p.eps_0 =  8.85e-12; % F/m
 p.mu_0 = 1.26e-6; % N/A^2
 p.delta_x = 100e-9; % m
@@ -16,7 +16,7 @@ H = zeros(p.N,1); % magnetic field
 J = zeros(p.N,1);
 
 % simulation setup and initial conditions
-X0 = [sqrt(p.eps_0/p.mu_0)*gaussian_start(1,100,400,100,p.N)'; -gaussian_start(1,100,400,100,p.N)']; % V/m and A/m
+X0 = [sqrt(p.eps_0/p.mu_0)*gaussian_start(1,100,400,100,p.N, 0, 0)'; -gaussian_start(1,100,400,100,p.N, 0, 0)']; % V/m and A/m
 
 % change logarithmicly the step
 eps = logspace(10, -20, 100);

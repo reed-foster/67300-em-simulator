@@ -2,7 +2,7 @@ clear
 close all
 
 params = nonlinear_params();
-params.N = 10;
+params.N = 1000;
 
 % source 
 dt = params.dz/3e8; %50e-18; % s
