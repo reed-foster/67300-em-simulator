@@ -3,25 +3,23 @@ close all
 
 params = nonlinear_params();
 
-figure(3);
-plot_permittivity(params);
+%figure(3);
+%plot_permittivity(params);
 %return;
 
 % source 
 dt = params.dz/3e8; %50e-18; % s
-tf = 500e-15; % s
+tf = 50e-15; % s
 tsteps = round(tf/dt);
 tspan = linspace(0,(tsteps-1)*dt,tsteps); % s
 J = zeros(params.N,tsteps);
 dtJ = zeros(params.N,tsteps);
 
 omega_J = 2*pi*3e8/(1.55e-6*3); % angular frequency for 1.55um
-t0_J = 7*2*pi/omega_J;
-dtJ(round(params.N/2),:) = ricker(2e8/params.dz*omega_J, omega_J, tsteps, dt, t0_J);
+t0_J = 2*2*pi/omega_J;
+dtJ(round(params.N/2),:) = ricker(5e7/params.dz*omega_J, omega_J, tsteps, dt, t0_J);
 %figure(4);
 %plot(tspan, dtJ(round(params.N/2),:), '-o');
-%hold on;
-%plot(tspan, dtJ_ricker, '-o');
 %return;
 
 % simulation setup and initial conditions
@@ -47,7 +45,12 @@ X_end = X(end,:);
 gen_video = true;
 plot_all = false;
 if gen_video
-  figure(1);
+  f = figure(1);
+  set(f, 'resize', 'off', 'Position', [100 100 800 300]);
+  tiledlayout(2,7);
+  ax_ED = nexttile(1, [1 4]);
+  ax_dtEdtD = nexttile(8, [1 4]);
+  ax_J = nexttile(5, [2 3]);
   
   video = VideoWriter('nonlinear_f_test.avi'); %Create a video object
   open(video); % Open video source - restricts the use of video for your program
@@ -63,42 +66,54 @@ if gen_video
   if (m_D == 0); m_D = 1; end
   for i=i_list
     [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(i,:)',params);
-    subplot(2,1,1);
-    yyaxis left;
-    plot(x*1e6, E*E_scale, '-o');
-    ylabel("field [V/nm]");
-    ylim([-m_E m_E]);
-    yyaxis right;
-    plot(x*1e6, D*D_scale, '-o');
-    ylabel("displacement [pC/um^2]");
-    ylim([-m_D m_D]);
-    legend("E_x(z,t)", "D_x(z,t)");
-    title(sprintf("t = %0.3f [fs]", tspan(i)*1e15));
+    yyaxis(ax_ED, 'left');
+    plot(ax_ED, x*1e6, E*E_scale, '-o');
+    ylabel(ax_ED, "field [V/nm]");
+    ylim(ax_ED, [-m_E m_E]);
+    yyaxis(ax_ED, 'right');
+    plot(ax_ED, x*1e6, D*D_scale, '-o');
+    ylabel(ax_ED, "displacement [pC/um^2]");
+    ylim(ax_ED, [-m_D m_D]);
+    legend(ax_ED, "E_x(z,t)", "D_x(z,t)");
+    title(ax_ED, sprintf("t = %0.3f [fs]", tspan(i)*1e15));
 
-    subplot(2,1,2);
     % zoom in on the forward-propagating pulse
-    yyaxis left;
-    [~,n0] = max(E(round(params.N/2):end));
-    n0 = n0 + round(params.N/2) + round(w/2);
-    xzoom = n0*params.dz+x(n0-w:n0+w); % m
-    Ezoom = E(n0-w:n0+w);
-    Dzoom = D(n0-w:n0+w);
-    m_Ezoom = 1.5*max(abs(Ezoom))*E_scale;
-    m_Dzoom = 1.5*max(abs(Dzoom))*D_scale;
+    yyaxis(ax_dtEdtD, 'left');
+    [m,n0] = max(E(round(params.N/2):end));
+    if (m < 0.001*m_E)
+      n0 = round(params.N/2);
+    else
+      n0 = n0 + round(params.N/2) + round(w/2);
+    end
+    xzoom = x(max(n0-w,1):min(n0+w,params.N)); % m
+    Ezoom = E(max(n0-w,1):min(n0+w,params.N));
+    Dzoom = D(max(n0-w,1):min(n0+w,params.N));
+    m_Ezoom = max(1.5*max(abs(Ezoom))*E_scale, 0.1*m_E);
+    m_Dzoom = max(1.5*max(abs(Dzoom))*D_scale, 0.1*m_D);
     if (m_Ezoom == 0); m_Ezoom = 1; end
     if (m_Dzoom == 0); m_Dzoom = 1; end
-    plot(xzoom*1e6, Ezoom*E_scale, '-o');
-    ylabel("field [V/nm]");
-    ylim([-m_Ezoom m_Ezoom]);
-    xlim([xzoom(1)*1e6, xzoom(end)*1e6]);
-    yyaxis right;
-    plot(xzoom*1e6, Dzoom*D_scale, '-o');
-    ylabel("displacement [pC/um^2]");
-    ylim([-m_Dzoom m_Dzoom]);
-    xlim([xzoom(1)*1e6, xzoom(end)*1e6]);
-    legend("E_x(z,t)", "D_x(z,t)");
+    plot(ax_dtEdtD, xzoom*1e6, Ezoom*E_scale, '-o');
+    ylabel(ax_dtEdtD, "field [V/nm]");
+    ylim(ax_dtEdtD, [-m_Ezoom m_Ezoom]);
+    xlim(ax_dtEdtD, [xzoom(1)*1e6, xzoom(end)*1e6]);
+    yyaxis(ax_dtEdtD, 'right');
+    plot(ax_dtEdtD, xzoom*1e6, Dzoom*D_scale, '-o');
+    ylabel(ax_dtEdtD, "displacement [pC/um^2]");
+    ylim(ax_dtEdtD, [-m_Dzoom m_Dzoom]);
+    xlim(ax_dtEdtD, [xzoom(1)*1e6, xzoom(end)*1e6]);
+    legend(ax_dtEdtD, "E_x(z,t)", "D_x(z,t)");
     
-    xlabel("x [um]");
+    xlabel(ax_dtEdtD, "x [um]");
+
+
+    eps_J = 1e-4;
+    J_f = JacobianCalculation(@(X) nonlinear_f(X,dtJ(:,i),params), X(i,:)', eps_J, size(X,2));
+    set(gcf, 'CurrentAxes', ax_J);
+    spy(J_f > 0, 'r');
+    hold on;
+    spy(J_f < 0, 'b');
+    title(ax_J, sprintf("Jacobian (eps = %1.1e, x_{order} = %i)", eps_J, params.x_order));
+
     drawnow;
     vidFrame = getframe(gcf);
     %if i < i_list(end);
