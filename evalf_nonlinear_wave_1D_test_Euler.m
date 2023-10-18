@@ -1,6 +1,6 @@
-clear
 close all
-clc
+
+params = nonlinear_params();
 
 %parameters 
 params.N = 150; % discretization
@@ -21,44 +21,20 @@ P0 = zeros(size(params.Lorentz, 1), params.N);
 dtP0 = zeros(size(params.Lorentz, 1), params.N);
 
 % simulation setup and initial conditions
-x = linspace(0,(params.N-1)*params.delta_x,params.N);
-%x = linspace(0,(params.N-1)*params.dz,params.N); % m
+x = linspace(0,(params.N-1)*params.delta_x,params.N); % m
 
-M = kron([1 0; 0 1], eye(params.N));
 
 %X0 = [sqrt(params.eps_0/params.mu_0)*gaussian_start(1,100,400,100,params.N)'; -gaussian_start(1,100,400,100,params.N)']; % V/m and A/m
 X0 = nonlinear_generate_X(E0, dtE0, P0, dtP0, params);
 
-%Xp0 = nonlinear_f(X,dtJ,params);
-
-figure(2);
-subplot(2,1,1);
-yyaxis left;
-plot(x*1e6, X0(1:params.N));
-yyaxis right;
-plot(x*1e6, X0(params.N+1:2*params.N));
-legend("H_y(x,0)", "E_z(x,0)");
-subplot(2,1,2);
-yyaxis left;
-plot(x*1e6, Xp0(1:params.N));
-yyaxis right;
-plot(x*1e6, Xp0(params.N+1:2*params.N));
-legend("d_tH_y(x,0)", "d_tE_z(x,0)");
-
 tspan = linspace(0,100e-15,331); % s
-
-% 
-% options = odeset('Mass',M,'MassSingular','no','RelTol',1e-3,'AbsTol',1e-6);
-% 
-% [t,X] = ode45(@(t,X) nonlinear_f(X,dtJ(:,round(t/dt+0.5)),params), tspan, X0, options)
-
 t_start = 0;
 t_stop = 1e-6;
 timestop = 10e-9;
 
 %[t,X] = ode45(@(t,X) nonlinear_f(X,dtJ(:,round(t/dt+0.5)),params), tspan, X0, options);
 
-[X,t] = ForwardEuler(@(t,X) nonlinear_f(X,dtJ(:,round(t/dt+0.5)),params), X, dtJ, p, t_start,t_stop,timestep,0);
+[X,t] = ForwardEuler(@nonlinear_f, X0, dtJ, p, t_start,t_stop,timestep,0);
 
 H_t = X(:,1:params.N);
 E_t = X(:,params.N+1:2*params.N);
