@@ -16,10 +16,12 @@ J = zeros(params.N,tsteps);
 dtJ = zeros(params.N,tsteps);
 
 omega_J = 2*pi*3e8/(1.55e-6*3); % angular frequency for 1.55um
-dtJ_ricker = 2e8/params.dz*omega_J*(1-((tspan-2*pi/omega_J)*omega_J).^2).*exp(-(tspan-2*pi/omega_J).^2/(2*(1/omega_J)^2));
-dtJ(round(params.N/2),:) = dtJ_ricker;
+t0_J = 7*2*pi/omega_J;
+dtJ(round(params.N/2),:) = ricker(2e8/params.dz*omega_J, omega_J, tsteps, dt, t0_J);
 %figure(4);
 %plot(tspan, dtJ(round(params.N/2),:), '-o');
+%hold on;
+%plot(tspan, dtJ_ricker, '-o');
 %return;
 
 % simulation setup and initial conditions
@@ -62,7 +64,7 @@ if gen_video
   E_scale = 1/1e9; % V/nm
   D_scale = 1e12/1e12; % pC/um^2
   w = round(2.5*2*pi*3e8/(omega_J*3)/params.dz);
-  [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(round(2*2*pi/omega_J/dt),:)',params);
+  [E, D, dtE, dtD, P, dtP] = nonlinear_u(X(round(t0_J/dt),:)',params);
   m_E = 1.1*max(abs(E))*E_scale;
   m_D = 1.1*max(abs(D))*D_scale;
   if (m_E == 0); m_E = 1; end
