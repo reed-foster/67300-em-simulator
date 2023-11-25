@@ -19,15 +19,15 @@ function p = params;
   p.mu_0 = 1.26e-6; % N/A^2
   p.chi_2 = 41.7e-12; % m/V Laboratory for Nanoscale Optics, John A. Paulson School of Engineering and Applied Sciences, Harvard University
   p.chi_3 = 1.5e-20; % m^2/V^2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/pssb.202200453 
-  p.Lorentz = [4 2*pi*1e9 2*pi*1e11; ...
-                    2 2*pi*9e12 2*pi*3e14]; % arbitrary
+  p.Lorentz = [4 2*pi*1e10 2*pi*1e11; ...
+                    2 2*pi*9e13 2*pi*3e14]; % arbitrary
 
   % simulation p
   p.x_order = 0;
-  p.N = 201; % discretization
-  p.dz = 2e-9; % m
+  p.N = 501; % discretization
+  p.dz = 10e-9; % m
   p.dt = p.dz/3e8; % s
-  p.tf = 300e-15; % s
+  p.tf = 500e-15; % s
 
   % source parameters
   p.omega_J = 2*pi*3e8/1.55e-6; % angular frequency for 1.55um

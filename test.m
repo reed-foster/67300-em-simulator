@@ -22,5 +22,5 @@ gen_video = true;
 plot_jacobian = false;
 xvec = linspace(0,(p.N-1)*p.dz,p.N); % m
 zoom_width = 10e-6; % m
-frame_dec = 10;
+frame_dec = 12;
 visualize_state(xvec, p.tvec, X', p, zoom_width, gen_video, plot_jacobian, frame_dec, 'test.avi');
