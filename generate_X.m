@@ -1,5 +1,4 @@
-function X = nonlinear_generate_X(E, dtE, P, dtP, params);
-  % TODO : vectorize and refactor so we have a separate function that generates the indices into the X vector
+function X = generate_X(E, dtE, P, dtP, params);
   % E_i = electric field at node i
   % dtE_i = time derivative of E_i
   % P_pi = pth-pole polarization response at node i

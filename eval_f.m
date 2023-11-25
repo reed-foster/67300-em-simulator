@@ -1,4 +1,4 @@
-function dxdt = nonlinear_f(X,dtJ,params)
+function dxdt = eval_f(X,dtJ,params)
   % E_i = electric field at node i
   % dtE_i = time derivative of E_i
   % P_pi = pth-pole polarization response at node i
@@ -24,7 +24,7 @@ function dxdt = nonlinear_f(X,dtJ,params)
   idx_step = 2*(1 + num_poles);
   dxdt = zeros(params.N*idx_step, 1);
   % split up state variable X so we can do vectorized computation of dxdt
-  [E, dtE, P, dtP] = nonlinear_split_X(X, params);
+  [E, dtE, P, dtP] = split_X(X, params);
 
   % eqn 1: rank reduction (d/dt(E) = dtE);
   dtdtP = zeros(num_poles, params.N);
@@ -41,5 +41,5 @@ function dxdt = nonlinear_f(X,dtJ,params)
   dtdtE = dtdtE - (2*params.eps_0).*(params.chi_2 + E.*(3*params.chi_3)).*(dtE.^2);
   dtdtE = dtdtE - sum(dtdtP, 1)' + dtJ;
   dtdtE = dtdtE ./ (params.eps_0*(1 + (2*params.chi_2).*E + (3*params.chi_3).*(E.^2)));
-  dxdt = nonlinear_generate_X(dtE, dtdtE, dtP, dtdtP, params);
+  dxdt = generate_X(dtE, dtdtE, dtP, dtdtP, params);
 end

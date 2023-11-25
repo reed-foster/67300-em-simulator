@@ -1,5 +1,4 @@
-% TODO : vectorize and refactor so we have a separate function that generates the indices into the X vector
-function [E, dtE, P, dtP] = nonlinear_split_X(X, params);
+function [E, dtE, P, dtP] = split_X(X, params);
   % E_i = electric field at node i
   % dtE_i = time derivative of E_i
   % P_pi = pth-pole polarization response at node i

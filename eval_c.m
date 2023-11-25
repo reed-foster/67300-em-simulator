@@ -1,4 +1,4 @@
-function [E, D, dtE, dtD, P, dtP] = nonlinear_c(X,params);
+function [E, D, dtE, dtD, P, dtP] = eval_c(X,params);
   % get the output from the state X
   % E_i = electric field at node i
   % dtE_i = time derivative of E_i
@@ -21,7 +21,7 @@ function [E, D, dtE, dtD, P, dtP] = nonlinear_c(X,params);
   %   0:  [E_1, dtE_1, P_11, dtP_11, P_21, dtP_21, P_31, dtP_31, ... E_2, dtE_2, P_12, dtP_12 ...]
   %   1:  [E_1, E_2, ... dtE_1, dtE_2, ... P_11, P_12, ... P_21, P_22, ... dtP_11, dtP_12, ... dtP_21, dtP_22]
   
-  [E, dtE, P, dtP] = nonlinear_split_X(X,params);
+  [E, dtE, P, dtP] = split_X(X,params);
   D = params.eps_0*(E + params.chi_2*E.^2 + params.chi_3*E.^3) + sum(P,1)';
   dtD = params.eps_0*(dtE + 2*params.chi_2*E.*dtE + 3*params.chi_3*E.^2.*dtE) + sum(dtP,1)';
 end
