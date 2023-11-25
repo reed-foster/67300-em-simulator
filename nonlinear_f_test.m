@@ -7,8 +7,6 @@ params = nonlinear_params();
 params.tsteps = round(params.tf/params.dt);
 params.tvec = linspace(0,(params.tsteps-1)*params.dt,params.tsteps); % s
 
-dtJ = @(t) ricker(t, params.ampl_J, params.omega_J, params.t0_J);
-
 % simulation setup and initial conditions
 E0 = zeros(params.N,1);
 dtE0 = zeros(params.N, 1);
