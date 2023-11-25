@@ -33,4 +33,5 @@ function params = nonlinear_params;
   params.omega_J = 2*pi*3e8/1.55e-6; % angular frequency for 1.55um
   params.t0_J = 2*2*pi/params.omega_J; % s
   params.ampl_J = 5e7/params.dz*params.omega_J; % arbitrary
+  params.source_type = "sinusoid"; % ricker or sinusoid
 end
