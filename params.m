@@ -22,16 +22,25 @@ function p = params;
   p.Lorentz = [4 2*pi*1e10 2*pi*1e11; ...
                     2 2*pi*9e13 2*pi*3e14]; % arbitrary
 
-  % simulation p
+  % simulation parameters
   p.x_order = 0;
-  p.N = 501; % discretization
-  p.dz = 10e-9; % m
+  p.N = 101; % discretization
+  p.dz = 50e-9; % m
   p.dt = p.dz/3e8; % s
-  p.tf = 500e-15; % s
+  p.tf = 50e-15; % s
 
   % source parameters
   p.omega_J = 2*pi*3e8/1.55e-6; % angular frequency for 1.55um
   p.t0_J = 2*2*pi/p.omega_J; % s
   p.ampl_J = 5e7/p.dz*p.omega_J; % arbitrary
   p.source_type = "ricker"; % ricker or sinusoid
+
+  % precompute unit scaling
+  %p.E_scale = p.eps_0*sum(p.Lorentz(:,1));
+  p.E_scale = p.eps_0;
+  p.P_scale = 1;
+  p.dtE_scale = p.E_scale*p.dt*100;
+  p.dtP_scale = p.P_scale*p.dt*100;
+  e = ones(p.N,1);
+  p.X_scale = generate_X(e*p.E_scale, e*p.dtE_scale, e*p.P_scale, e*p.dtP_scale, p);
 end

@@ -11,6 +11,7 @@ function [t,X,max_k] = trapezoid(eval_f,eval_Jf,p,u,x0,tf,dt,trap_opts,newton_op
    % dt: timestep
    % trap_opts: struct with options for trapezoidal integrator
    %  save_intermediate: if true, save all timesteps, otherwise only save the final state
+   %  visualize: if Inf, don't visualize, otherwise, show every 'visualize'th frame
    % newton_opts: struct with options for Newton:
    %  err_f: termination condition for error on |f(x)|
    %  err_dx: termination condition on |dx|
@@ -28,9 +29,12 @@ function [t,X,max_k] = trapezoid(eval_f,eval_Jf,p,u,x0,tf,dt,trap_opts,newton_op
       f_trap = @(x,p,u) x - dt_l/2*eval_f(x,p,u) - gamma;
       Jf_trap = @(x,p,u) eye(length(x0)) - dt_l/2*eval_Jf(x,p,u);
       % call newton to solve f_trap
-      [x,~,~,~,k,~] = newton(f_trap, Jf_trap, p, u_t, X(:,l), newton_opts);
+      [x,~,~,~,~,k,~] = newton(f_trap, Jf_trap, p, u_t, X(:,l) + dt_l*eval_f(X(:,l),p,u_t), newton_opts);
       if k > max_k
          max_k = k;
+      end
+      if mod(l, trap_opts.visualize) == 0
+         visualize_state(X(:,l),t(l),p)
       end
       % use number of iterations to dynamically adjust timestep
       X(:,l+1) = x;
