@@ -66,6 +66,7 @@ for i = 1:length(dt)
 end
 legend("dt = 10^{-19} [s]", "dt = 10^{-20} [s]", "dt = 10^{-21} [s]");
 % plot relative error
+figure;
 [E_ref, ~, P_ref, ~] = split_X(X_ref(:,length(dt))./p.X_scale, p);
 for i = 1:length(dt)-1
   [E, ~, P, ~] = split_X(X_ref(:,i)./p.X_scale, p);
@@ -82,4 +83,4 @@ for i = 1:length(dt)-1
   ylabel("polarization density relative error");
   xlabel("z [um]");
 end
-legend("dt = 10^{-19} [s]", "dt = 10^{-20} [s]", "dt = 10^{-21} [s]");
+legend("dt = 10^{-19} [s]", "dt = 10^{-20} [s]");
