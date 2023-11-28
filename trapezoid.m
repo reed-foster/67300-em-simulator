@@ -1,16 +1,17 @@
 function [t,X,max_k] = trapezoid(eval_f,eval_Jf,p,u,x0,tf,dt,trap_opts,newton_opts);
-
-   % usage
+   % trapezoidal integrator to simulate state evolution of model dx/dt=f(x,p,u)
+   %
+   % usage:
    % trapezoid(@f, @jf, p, @u, x0, tf, dt, trap_opts);
-   % eval_f: evaluates system (x, p, u)
-   % eval_Jf: jacobian of system (x, p, u)
+   %
+   % eval_f: handle to function that evaluates system f(x, p, u)
+   % eval_Jf: handle to jacobian of system Jf(x, p, u)
    % p: parameters
-   % u: input function
+   % u: handle to input function u(t, p)
    % x0: initial state
    % tf: simulation stop time
    % dt: timestep
    % trap_opts: struct with options for trapezoidal integrator
-   %  save_intermediate: if true, save all timesteps, otherwise only save the final state
    %  visualize: if Inf, don't visualize, otherwise, show every 'visualize'th frame
    % newton_opts: struct with options for Newton:
    %  err_f: termination condition for error on |f(x)|
@@ -22,7 +23,7 @@ function [t,X,max_k] = trapezoid(eval_f,eval_Jf,p,u,x0,tf,dt,trap_opts,newton_op
 
    for l = 1:ceil(tf/dt)
       dt_l = min(dt, tf-t(l));
-      u_t = u(t(l));
+      u_t = u(t(l), p);
       % part of f_trap that doesn't depend on x, so precompute it to save time
       gamma = X(:,l) + dt_l/2*eval_f(X(:,l),p,u_t);
       % trap function and jacobian

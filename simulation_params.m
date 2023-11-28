@@ -1,4 +1,4 @@
-function p = params;
+function p = simulation_params;
   % p = parameters
   %  N: number of points in space (number of nodes)
   %  dz: distance between points in space
@@ -20,23 +20,23 @@ function p = params;
   p.chi_2 = 41.7e-12; % m/V Laboratory for Nanoscale Optics, John A. Paulson School of Engineering and Applied Sciences, Harvard University
   p.chi_3 = 1.5e-20; % m^2/V^2 https://onlinelibrary.wiley.com/doi/pdf/10.1002/pssb.202200453 
   p.Lorentz = [4 2*pi*1e10 2*pi*1e11; ...
-                    2 2*pi*9e13 2*pi*3e14]; % arbitrary
+               2 2*pi*3e14 2*pi*3e15]; % arbitrary
 
   % simulation parameters
   p.x_order = 0;
-  p.N = 101; % discretization
-  p.dz = 50e-9; % m
+  p.N = 801; % discretization
+  p.dz = 10e-9; % m
   p.dt = p.dz/3e8; % s
-  p.tf = 50e-15; % s
+  p.tf = 20e-15; % s
 
   % source parameters
   p.omega_J = 2*pi*3e8/1.55e-6; % angular frequency for 1.55um
-  p.t0_J = 2*2*pi/p.omega_J; % s
+  p.t0_J = 2*2*pi/p.omega_J; % s, sets delay for ricker wavelet, also sets turnon time of source
   p.ampl_J = 5e7/p.dz*p.omega_J; % arbitrary
-  p.source_type = "ricker"; % ricker or sinusoid
+  %p.ampl_J = 5e-3/p.dz*p.omega_J; % arbitrary
+  p.source_type = "sinusoid"; % ricker or sinusoid
 
   % precompute unit scaling
-  %p.E_scale = p.eps_0*sum(p.Lorentz(:,1));
   p.E_scale = p.eps_0;
   p.P_scale = 1;
   p.dtE_scale = p.E_scale*p.dt*100;
