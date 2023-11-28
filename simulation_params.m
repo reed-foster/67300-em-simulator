@@ -34,7 +34,7 @@ function p = simulation_params;
   p.t0_J = 2*2*pi/p.omega_J; % s, sets delay for ricker wavelet, also sets turnon time of source
   p.ampl_J = 5e7/p.dz*p.omega_J; % arbitrary
   %p.ampl_J = 5e-3/p.dz*p.omega_J; % arbitrary
-  p.source_type = "sinusoid"; % ricker or sinusoid
+  p.source_type = "ricker"; % ricker or sinusoid
 
   % precompute unit scaling
   p.E_scale = p.eps_0;

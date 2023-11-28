@@ -29,7 +29,7 @@ function [x,converged,err_f_k,err_dx_k,err_rel_k,iterations,X] = newton(eval_f,e
       X(:,k+1) = X(:,k) + dx;
       err_f_k(k+1) = norm(f,inf);
       err_dx_k(k+1) = norm(dx,inf);
-      err_rel_k(k+1) = norm(dx./X(:,k),inf);
+      err_rel_k(k+1) = norm(dx,inf)./(norm(X(:,k),inf) + eps);
       k = k+1;
    end
    x = X(:,end);

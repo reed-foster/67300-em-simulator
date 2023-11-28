@@ -21,6 +21,11 @@ function [t,X,max_k] = trapezoid(eval_f,eval_Jf,p,u,x0,tf,dt,trap_opts,newton_op
    X(:,1) = x0;
    max_k = 1;
 
+   if (trap_opts.visualize < Inf)
+      visualize_struct.init = true;
+      visualize_struct = visualize_state(X(:,1), t(1), p, visualize_struct);
+   end
+
    for l = 1:ceil(tf/dt)
       dt_l = min(dt, tf-t(l));
       u_t = u(t(l), p);
@@ -30,12 +35,12 @@ function [t,X,max_k] = trapezoid(eval_f,eval_Jf,p,u,x0,tf,dt,trap_opts,newton_op
       f_trap = @(x,p,u) x - dt_l/2*eval_f(x,p,u) - gamma;
       Jf_trap = @(x,p,u) eye(length(x0)) - dt_l/2*eval_Jf(x,p,u);
       % call newton to solve f_trap
-      [x,~,~,~,~,k,~] = newton(f_trap, Jf_trap, p, u_t, X(:,l) + dt_l*eval_f(X(:,l),p,u_t), newton_opts);
+      [x,converged,err_f_k,err_dx_k,err_rel_k,k,~] = newton(f_trap, Jf_trap, p, u_t, X(:,l) + dt_l*eval_f(X(:,l),p,u_t), newton_opts);
       if k > max_k
          max_k = k;
       end
       if mod(l, trap_opts.visualize) == 0
-         visualize_state(X(:,l),t(l),p)
+         visualize_state(X(:,l),t(l),p,visualize_struct);
       end
       % use number of iterations to dynamically adjust timestep
       X(:,l+1) = x;
