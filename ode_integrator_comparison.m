@@ -63,7 +63,7 @@ end
 for i=1:length(ampl)
   figure;
   zvec = linspace(0, (p.N-1)*p.dz, p.N);
-  [E_ref, ~, P_ref, ~] = split_X(X_ref(:,i,length(dt))./p.X_scale, p);
+  [E_ref, ~, P_ref, ~] = split_X(X_ref(:,i,end)./p.X_scale, p);
   m_E = 1.1*max(abs(E_ref)) + eps;
   m_P = 1.1*max(abs(sum(P_ref,1))) + eps;
   for j = 1:length(dt)
@@ -179,5 +179,51 @@ end
 
 % compare
 % do plot of error vs runtime with separate series for each amplitude
+t_euler_avg = [];%zeros(length(ampl)*length(dt),1);
+t_trap_avg = [];%zeros(length(ampl)*length(dt)*length(err_rel)*length(err_gcr),1);
+err_euler = [];
+err_trap = [];
+N_avg = 5;
+f1 = figure;
+f2 = figure;
 for ampl_i=1:length(ampl)
+  [E_ref, ~, P_ref, ~] = split_X(X_ref(:,ampl_i,end)./p.X_scale, p);
+  for dt_i=1:length(dt)
+    % get error and avg runtime of Forward Euler
+    t_euler_avg(ampl_i,end+1) = median(mink(t_euler(:,ampl_i,dt_i),N_avg));
+    [E, ~, P, ~] = split_X(X_euler(:,ampl_i,dt_i)./p.X_scale, p);
+    E_err = max(abs(E - E_ref)./max(abs(E_ref)));
+    P_err = max(abs(sum(P,1) - sum(P_ref,1))./max(abs(sum(P_ref,1))));
+    err_euler(ampl_i,end+1) = max(E_err, P_err);
+
+    % get error and avg runtime of Trapezoidal
+    for err_rel_i=1:length(err_rel)
+      for err_gcr_i=1:length(err_gcr)
+        runtime = median(mink(t_trap(:,ampl_i,dt_i,err_rel_i,err_gcr_i),N_avg));
+        if runtime > 0
+          t_trap_avg(ampl_i,end+1) = runtime;
+          [E, ~, P, ~] = split_X(X_trap(:,ampl_i,dt_i,err_rel_i,err_gcr_i)./p.X_scale, p);
+          E_err = max(abs(E - E_ref)./max(abs(E_ref)));
+          P_err = max(abs(sum(P,1) - sum(P_ref,1))./max(abs(sum(P_ref,1))));
+          err_trap(ampl_i,end+1) = max(E_err, P_err);
+        end
+      end
+    end
+  end
+  figure(f1);
+  loglog(t_euler_avg(ampl_i,:), err_euler(ampl_i,:), '.', 'Markersize', 10);
+  hold on;
+  title("Euler error vs runtime");
+  ylim([1e-6 1]);
+  xlim([1 100]);
+  figure(f2);
+  loglog(t_trap_avg(ampl_i,:), err_trap(ampl_i,:), '.', 'Markersize', 10);
+  hold on;
+  title("Trap error vs runtime");
+  ylim([1e-6 1]);
+  xlim([1 100]);
 end
+figure(f1);
+legend(num2str(ampl'));
+figure(f2);
+legend(num2str(ampl'));
