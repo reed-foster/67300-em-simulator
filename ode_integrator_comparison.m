@@ -59,6 +59,7 @@ else
   % X_ref, ref_confidence, dt, ampl, p
 end
 
+% evaluate forward euler
 for i=1:length(ampl)
   figure;
   zvec = linspace(0, (p.N-1)*p.dz, p.N);
@@ -104,3 +105,20 @@ for i=1:length(ampl)
   legend(num2str(dt(1:end-1)',"dt = %.0d [s]"));
   title(strcat("ampl = ", num2str(ampl(i))));
 end
+
+% now compare with Trapezoidal + NewtonGCR
+% sweep over newton err_dx and err_gcr
+% also sweep over timestep
+% run each sim 10x and pick the average of the top 3 times
+
+newton_opts.err_f = Inf;
+newton_opts.err_dx = 1e-8;
+newton_opts.err_rel = Inf;
+newton_opts.max_iter = 20;
+newton_opts.matrix_free = true;
+newton_opts.err_gcr = 1e-8; % relative error for GCR residual inside Newton
+newton_opts.eps_fd = 1e-3; % relative perturbation for Jacobian
+newton_opts.save_intermediate = false;
+
+trap_opts.save_intermediate = false;
+trap_opts.visualize = Inf;

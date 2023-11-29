@@ -1,11 +1,10 @@
-function [t,X,max_k] = trapezoid(eval_f,eval_Jf,p,u,x0,tf,dt,trap_opts,newton_opts);
+function [t,X,max_k] = trapezoid(eval_f,p,u,x0,tf,dt,trap_opts,newton_opts);
    % trapezoidal integrator to simulate state evolution of model dx/dt=f(x,p,u)
    %
    % usage:
    % trapezoid(@f, @jf, p, @u, x0, tf, dt, trap_opts);
    %
    % eval_f: handle to function that evaluates system f(x, p, u)
-   % eval_Jf: handle to jacobian of system Jf(x, p, u)
    % p: parameters
    % u: handle to input function u(t, p)
    % x0: initial state
@@ -33,9 +32,8 @@ function [t,X,max_k] = trapezoid(eval_f,eval_Jf,p,u,x0,tf,dt,trap_opts,newton_op
       gamma = X(:,l) + dt_l/2*eval_f(X(:,l),p,u_t);
       % trap function and jacobian
       f_trap = @(x,p,u) x - dt_l/2*eval_f(x,p,u) - gamma;
-      Jf_trap = @(x,p,u) eye(length(x0)) - dt_l/2*eval_Jf(x,p,u);
       % call newton to solve f_trap
-      [x,converged,err_f_k,err_dx_k,err_rel_k,k,~] = newton(f_trap, Jf_trap, p, u_t, X(:,l) + dt_l*eval_f(X(:,l),p,u_t), newton_opts);
+      [x,converged,err_f_k,err_dx_k,err_rel_k,k,~] = newton(f_trap, p, u_t, X(:,l) + dt_l*eval_f(X(:,l),p,u_t), newton_opts);
       if k > max_k
          max_k = k;
       end

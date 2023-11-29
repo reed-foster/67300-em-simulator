@@ -1,17 +1,23 @@
-function [x,converged,err_f_k,err_dx_k,err_rel_k,iterations,X] = newton(eval_f,eval_Jf,p,u,x0,newton_opts);
+function [x,converged,err_f_k,err_dx_k,err_rel_k,iterations,X] = newton(eval_f,p,u,x0,opts);
 
    % usage
-   % newton(@f, @jf, p, u, x0, newton_opts);
+   % newton(@f, p, u, x0, opts);
    % eval_f: evaluates system (x, p, u)
-   % eval_Jf: jacobian of system (x, p, u)
    % p: parameters
    % u: input
    % x0: initial guess
-   % newton_opts: struct with options for Newton:
+   % opts: struct with options for Newton:
    %  err_f: termination condition for error on |f(x)|
    %  err_dx: termination condition on |dx|
    %  err_rel: termination condition on |dx./x|
    %  max_iter: maximum number of iterations
+   %  matrix_free: if true, use matrix-free GCR method, otherwise use finite-difference Jacobian
+   %  err_gcr: termination condition for matrix-free GCR method on error norm(b - Ax)/norm(b)
+   %  eps_fd: finite difference perturbation for matrix-free directional derivative and finite difference Jacobian
+
+   gcr_opts.err_b = opts.err_gcr;
+   gcr_opts.max_iter = size(x0,1) * 1.1;
+   gcr_opts.eps_x = opts.eps_fd;
 
    k = 1;
    X(:,1) = x0;
@@ -22,10 +28,15 @@ function [x,converged,err_f_k,err_dx_k,err_rel_k,iterations,X] = newton(eval_f,e
    err_f_k(1)   = Inf;
    err_dx_k(1)  = Inf;
    err_rel_k(1)  = Inf;
-   while k<=newton_opts.max_iter & (err_f_k(end)>newton_opts.err_f | err_dx_k(end)>newton_opts.err_dx),
+   while k<=opts.max_iter & (err_f_k(end)>opts.err_f | err_dx_k(end)>opts.err_dx | err_rel_k(end)>opts.err_rel),
       f = eval_f(X(:,k),p,u);
-      Jf = eval_Jf(X(:,k),p,u);
-      dx = Jf\(-f);
+      if opts.matrix_free
+         [dx, r_gcr, k_gcr] = tgcr_matrixfree(@(x) eval_f(x,p,u), X(:,k), -f, gcr_opts);
+      else
+         eps_J = max(opts.eps_fd*norm(X(:,k),inf), eps);
+         Jf = JacobianCalculation(@(x) eval_f(x,p,u), X(:,k), eps_J, size(x0,1));
+         dx = Jf\(-f);
+      end
       X(:,k+1) = X(:,k) + dx;
       err_f_k(k+1) = norm(f,inf);
       err_dx_k(k+1) = norm(dx,inf);
@@ -34,7 +45,7 @@ function [x,converged,err_f_k,err_dx_k,err_rel_k,iterations,X] = newton(eval_f,e
    end
    x = X(:,end);
    iterations = k-1; 
-   if err_f_k(end)<=newton_opts.err_f & err_dx_k(end)<=newton_opts.err_dx & err_rel_k(end)<=newton_opts.err_rel
+   if err_f_k(end)<=opts.err_f & err_dx_k(end)<=opts.err_dx & err_rel_k(end)<=opts.err_rel
       converged = 1;
    else
       converged=0;
