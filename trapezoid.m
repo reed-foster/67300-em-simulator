@@ -12,6 +12,7 @@ function [t,X,max_k] = trapezoid(eval_f,p,u,x0,tf,dt,trap_opts,newton_opts);
    % dt: timestep
    % trap_opts: struct with options for trapezoidal integrator
    %  visualize: if Inf, don't visualize, otherwise, show every 'visualize'th frame
+   %  save_intermediate: if true, save all results, otherwise only save final result
    % newton_opts: struct with options for Newton:
    %  err_f: termination condition for error on |f(x)|
    %  err_dx: termination condition on |dx|
@@ -26,22 +27,29 @@ function [t,X,max_k] = trapezoid(eval_f,p,u,x0,tf,dt,trap_opts,newton_opts);
    end
 
    for l = 1:ceil(tf/dt)
-      dt_l = min(dt, tf-t(l));
-      u_t = u(t(l), p);
+      if trap_opts.save_intermediate
+         lcurr = l;
+         lnext = l+1;
+      else
+         lcurr = 1;
+         lnext = 1;
+      end
+      dt_l = min(dt, tf-t(lcurr));
+      u_t = u(t(lcurr), p);
       % part of f_trap that doesn't depend on x, so precompute it to save time
-      gamma = X(:,l) + dt_l/2*eval_f(X(:,l),p,u_t);
+      gamma = X(:,lcurr) + dt_l/2*eval_f(X(:,lcurr),p,u_t);
       % trap function and jacobian
       f_trap = @(x,p,u) x - dt_l/2*eval_f(x,p,u) - gamma;
       % call newton to solve f_trap
-      [x,converged,err_f_k,err_dx_k,err_rel_k,k,~] = newton(f_trap, p, u_t, X(:,l) + dt_l*eval_f(X(:,l),p,u_t), newton_opts);
+      [x,converged,err_f_k,err_dx_k,err_rel_k,k,~] = newton(f_trap, p, u_t, X(:,lcurr) + dt_l*eval_f(X(:,lcurr),p,u_t), newton_opts);
       if k > max_k
          max_k = k;
       end
       if mod(l, trap_opts.visualize) == 0
-         visualize_state(X(:,l),t(l),p,visualize_struct);
+         visualize_state(X(:,lcurr),t(lcurr),p,visualize_struct);
       end
       % use number of iterations to dynamically adjust timestep
-      X(:,l+1) = x;
-      t(l+1) = t(l) + dt_l;
+      X(:,lnext) = x;
+      t(lnext) = t(lcurr) + dt_l;
    end
 end

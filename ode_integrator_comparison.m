@@ -4,7 +4,7 @@ close all
 p = simulation_params();
 
 % override timestep
-p.dt = 1e-20;
+% p.dt = 1e-20;
 % with Lorentizan Q = 1000:
 %   p.Lorentz = [4 2*pi*1e8 2*pi*1e11; ...
 %                2 2*pi*5e11 2*pi*5e14];
@@ -15,7 +15,7 @@ p.dt = 1e-20;
 %   p.Lorentz = [4 2*pi*1e10 2*pi*1e11; ...
 %                2 2*pi*3e14 2*pi*3e15];
 % excitation frequency is 193 THz, much further from resonance at 3 PHz
-% t_unstable = 1e-19 for forward_euler at all field strengths
+% t_unstable > 1e-19 for forward_euler at all field strengths
 
 % initial state
 E0 = zeros(p.N, 1);
@@ -106,19 +106,73 @@ for i=1:length(ampl)
   title(strcat("ampl = ", num2str(ampl(i))));
 end
 
-% now compare with Trapezoidal + NewtonGCR
-% sweep over newton err_dx and err_gcr
-% also sweep over timestep
-% run each sim 10x and pick the average of the top 3 times
+% now compare Forward Euler with Trapezoidal + NewtonGCR
+% sweep over newton err_rel and err_gcr
+% also sweep over timestep and excitation amplitude
+% run each sim 50x and pick the median of the top 10 times
+dt_euler_unstable = 1e-19;
+N_trials = 10;
+err_rel = logspace(-2, -8, 3);
+err_gcr = logspace(-2, -8, 3);
+dt = logspace(-16, -20, 5);
+ampl = logspace(-4, 8, 4);
+t_euler = zeros(N_trials, length(ampl), length(dt));
+t_trap = zeros(N_trials, length(ampl), length(dt), length(err_rel), length(err_gcr));
+X_euler = zeros(size(X0,1), length(ampl), length(dt));
+X_trap = zeros(size(X0,1), length(ampl), length(dt), length(err_rel), length(err_gcr));
 
+% setup for Trapezoidal + NewtonGCR
 newton_opts.err_f = Inf;
-newton_opts.err_dx = 1e-8;
-newton_opts.err_rel = Inf;
+newton_opts.err_dx = Inf;
 newton_opts.max_iter = 20;
-newton_opts.matrix_free = true;
-newton_opts.err_gcr = 1e-8; % relative error for GCR residual inside Newton
-newton_opts.eps_fd = 1e-3; % relative perturbation for Jacobian
-newton_opts.save_intermediate = false;
+newton_opts.matrix_free = true; % use matrix-free GCR solver for dx = J\(-f)
+newton_opts.eps_fd = 1e-7; % relative perturbation for Jacobian
+trap_opts.save_intermediate = false; % only save final state
+trap_opts.visualize = Inf; % don't visualize
+euler_opts.save_intermediate = false;
+euler_opts.visualize = Inf;
 
-trap_opts.save_intermediate = false;
-trap_opts.visualize = Inf;
+if ~isfile("ode_comparison.mat")
+  for trial=1:N_trials
+    disp("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+    disp(num2str(trial,"running trial %d"));
+    disp("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+    for ampl_i=1:length(ampl)
+      p.ampl_J = ampl(ampl_i)/p.dz*p.omega_J;
+      disp(num2str(p.ampl_J,"setting amplitude to %.2d [A/m/s]"));
+      for dt_i=1:length(dt)
+        p.dt = dt(dt_i);
+        disp(num2str(p.dt,"setting timestep to %.0d [s]"));
+        if p.dt <= dt_euler_unstable
+          % do euler measurement
+          disp("doing Forward Euler measurement");
+          tic;
+          [t,X] = forward_euler(@eval_f, p, @eval_u, X0, p.tf, p.dt, euler_opts);
+          t_euler(trial,ampl_i,dt_i) = toc;
+          X_euler(:,ampl_i,dt_i) = X;
+          disp(num2str(t_euler(trial,ampl_i,dt_i), "... took %d [s]"));
+          save("ode_comparison.mat","N_trials","ampl","dt","err_rel","err_gcr","t_euler","t_trap","X_euler","X_trap","newton_opts","trap_opts","p");
+        end
+        % do trap measurement
+        disp("doing Trap + Newton GCR measurements");
+        for err_rel_i=1:length(err_rel)
+          newton_opts.err_rel = err_rel(err_rel_i);
+          disp(num2str(newton_opts.err_rel, "setting newton err_rel to %d"));
+          for err_gcr_i=1:length(err_gcr)
+            newton_opts.err_gcr = err_gcr(err_gcr_i);
+            disp(num2str(newton_opts.err_gcr, "setting newton err_gcr to %d"));
+            tic;
+            [t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, trap_opts, newton_opts);
+            t_trap(trial,ampl_i,dt_i,err_rel_i,err_gcr_i) = toc;
+            X_trap(:,ampl_i,dt_i,err_rel_i,err_gcr_i) = X;
+            disp(num2str(t_trap(trial,ampl_i,dt_i,err_rel_i,err_gcr_i), "... took %d [s]"));
+            save("ode_comparison.mat","N_trials","ampl","dt","err_rel","err_gcr","t_euler","t_trap","X_euler","X_trap","newton_opts","trap_opts","p");
+          end
+        end
+      end
+    end
+  end
+else
+  load("ode_comparison.mat");
+  % N_trials, ampl, dt, err_rel, err_gcr, t_euler, t_trap, X_euler, X_trap, newton_opts, trap_opts, p
+end
