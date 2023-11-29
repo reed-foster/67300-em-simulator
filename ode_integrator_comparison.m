@@ -143,30 +143,30 @@ if ~isfile("ode_comparison.mat")
       for dt_i=1:length(dt)
         p.dt = dt(dt_i);
         disp(num2str(p.dt,"setting timestep to %.0d [s]"));
-        if p.dt <= dt_euler_unstable
-          % do euler measurement
-          disp("doing Forward Euler measurement");
-          tic;
-          [t,X] = forward_euler(@eval_f, p, @eval_u, X0, p.tf, p.dt, euler_opts);
-          t_euler(trial,ampl_i,dt_i) = toc;
-          X_euler(:,ampl_i,dt_i) = X;
-          disp(num2str(t_euler(trial,ampl_i,dt_i), "... took %d [s]"));
-          save("ode_comparison.mat","N_trials","ampl","dt","err_rel","err_gcr","t_euler","t_trap","X_euler","X_trap","newton_opts","trap_opts","p");
-        end
-        % do trap measurement
-        disp("doing Trap + Newton GCR measurements");
-        for err_rel_i=1:length(err_rel)
-          newton_opts.err_rel = err_rel(err_rel_i);
-          disp(num2str(newton_opts.err_rel, "setting newton err_rel to %d"));
-          for err_gcr_i=1:length(err_gcr)
-            newton_opts.err_gcr = err_gcr(err_gcr_i);
-            disp(num2str(newton_opts.err_gcr, "setting newton err_gcr to %d"));
-            tic;
-            [t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, trap_opts, newton_opts);
-            t_trap(trial,ampl_i,dt_i,err_rel_i,err_gcr_i) = toc;
-            X_trap(:,ampl_i,dt_i,err_rel_i,err_gcr_i) = X;
-            disp(num2str(t_trap(trial,ampl_i,dt_i,err_rel_i,err_gcr_i), "... took %d [s]"));
-            save("ode_comparison.mat","N_trials","ampl","dt","err_rel","err_gcr","t_euler","t_trap","X_euler","X_trap","newton_opts","trap_opts","p");
+        % do euler measurement
+        disp("doing Forward Euler measurement");
+        tic;
+        [t,X] = forward_euler(@eval_f, p, @eval_u, X0, p.tf, p.dt, euler_opts);
+        t_euler(trial,ampl_i,dt_i) = toc;
+        X_euler(:,ampl_i,dt_i) = X;
+        disp(num2str(t_euler(trial,ampl_i,dt_i), "... took %d [s]"));
+        save("ode_comparison.mat","N_trials","ampl","dt","err_rel","err_gcr","t_euler","t_trap","X_euler","X_trap","newton_opts","trap_opts","p");
+        if p.dt > dt_euler_unstable
+          % do trap measurement
+          disp("doing Trap + Newton GCR measurements");
+          for err_rel_i=1:length(err_rel)
+            newton_opts.err_rel = err_rel(err_rel_i);
+            disp(num2str(newton_opts.err_rel, "setting newton err_rel to %d"));
+            for err_gcr_i=1:length(err_gcr)
+              newton_opts.err_gcr = err_gcr(err_gcr_i);
+              disp(num2str(newton_opts.err_gcr, "setting newton err_gcr to %d"));
+              tic;
+              [t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, trap_opts, newton_opts);
+              t_trap(trial,ampl_i,dt_i,err_rel_i,err_gcr_i) = toc;
+              X_trap(:,ampl_i,dt_i,err_rel_i,err_gcr_i) = X;
+              disp(num2str(t_trap(trial,ampl_i,dt_i,err_rel_i,err_gcr_i), "... took %d [s]"));
+              save("ode_comparison.mat","N_trials","ampl","dt","err_rel","err_gcr","t_euler","t_trap","X_euler","X_trap","newton_opts","trap_opts","p");
+            end
           end
         end
       end
@@ -175,4 +175,9 @@ if ~isfile("ode_comparison.mat")
 else
   load("ode_comparison.mat");
   % N_trials, ampl, dt, err_rel, err_gcr, t_euler, t_trap, X_euler, X_trap, newton_opts, trap_opts, p
+end
+
+% compare
+% do plot of error vs runtime with separate series for each amplitude
+for ampl_i=1:length(ampl)
 end
