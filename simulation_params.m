@@ -24,10 +24,10 @@ function p = simulation_params;
 
   % simulation parameters
   p.x_order = 0;
-  p.N = 2001; % discretization
+  p.N = 601; % discretization
   p.dz = 10e-9; % m
   p.dt = p.dz/3e8; % s
-  p.tf = 80e-15; % s
+  p.tf = 60e-15; % s
 
   % source parameters
   p.omega_J = 2*pi*3e8/1.55e-6; % angular frequency for 1.55um
