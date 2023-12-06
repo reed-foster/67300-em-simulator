@@ -7,4 +7,7 @@ K_0 = eval_f(x_0, p, u_0) - J_f*x_0 - J_u*u_0;
 B = [K_0 J_u];
 A = J_f;
 
+A = sparse(A);
+B = sparse(B);
+
 end
