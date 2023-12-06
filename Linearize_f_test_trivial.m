@@ -2,7 +2,7 @@ clear all
 close all
 clc
 
-f = @(x) x^2;
+f = @(x) x^3;
 
 x_0 = 1;
 u_0 = 2;
