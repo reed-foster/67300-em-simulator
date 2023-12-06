@@ -32,7 +32,7 @@ function [x, r_norms, k] = tgcr_matrixfree(eval_f,xf,b,opts);
     p(:,k) = r;
     
     % matrix-free approximation for Ap(:,k) = A*p(:,k) (since A is a Jacobian)
-    epsilon_norm = epsilon_xf / norm(p(:,k),2);
+    epsilon_norm = epsilon_xf / r_norms(k);
     Ap(:,k) = (eval_f(xf + p(:,k)*epsilon_norm)- eval_f(xf))/epsilon_norm;
 
     % orthogonalize Ap to previous Ap vectors

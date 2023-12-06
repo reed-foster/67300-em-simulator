@@ -179,13 +179,13 @@ end
 
 % compare
 % do plot of error vs runtime with separate series for each amplitude
-t_euler_avg = [];%zeros(length(ampl)*length(dt),1);
-t_trap_avg = [];%zeros(length(ampl)*length(dt)*length(err_rel)*length(err_gcr),1);
+t_euler_avg = [];
+t_trap_avg = [];
 err_euler = [];
 err_trap = [];
 N_avg = 5;
 f1 = figure;
-f2 = figure;
+C = colororder;
 for ampl_i=1:length(ampl)
   [E_ref, ~, P_ref, ~] = split_X(X_ref(:,ampl_i,end)./p.X_scale, p);
   for dt_i=1:length(dt)
@@ -197,33 +197,30 @@ for ampl_i=1:length(ampl)
     err_euler(ampl_i,end+1) = max(E_err, P_err);
 
     % get error and avg runtime of Trapezoidal
-    for err_rel_i=1:length(err_rel)
-      for err_gcr_i=1:length(err_gcr)
-        runtime = median(mink(t_trap(:,ampl_i,dt_i,err_rel_i,err_gcr_i),N_avg));
-        if runtime > 0
-          t_trap_avg(ampl_i,end+1) = runtime;
-          [E, ~, P, ~] = split_X(X_trap(:,ampl_i,dt_i,err_rel_i,err_gcr_i)./p.X_scale, p);
-          E_err = max(abs(E - E_ref)./max(abs(E_ref)));
-          P_err = max(abs(sum(P,1) - sum(P_ref,1))./max(abs(sum(P_ref,1))));
-          err_trap(ampl_i,end+1) = max(E_err, P_err);
-        end
-      end
+    runtime = median(mink(t_trap(:,ampl_i,dt_i,1,1),N_avg));
+    if runtime > 0
+      t_trap_avg(ampl_i,end+1) = runtime;
+      [E, ~, P, ~] = split_X(X_trap(:,ampl_i,dt_i,1,1)./p.X_scale, p);
+      E_err = max(abs(E - E_ref)./max(abs(E_ref)));
+      P_err = max(abs(sum(P,1) - sum(P_ref,1))./max(abs(sum(P_ref,1))));
+      err_trap(ampl_i,end+1) = max(E_err, P_err);
     end
   end
   figure(f1);
-  loglog(t_euler_avg(ampl_i,:), err_euler(ampl_i,:), '.', 'Markersize', 10);
+  loglog(t_euler_avg(ampl_i,:), err_euler(ampl_i,:), 'o', 'Markersize', 10, 'color', C(ampl_i,:));
   hold on;
-  title("Euler error vs runtime");
-  ylim([1e-6 1]);
+  ylim([1e-6 1e2]);
   xlim([1 100]);
-  figure(f2);
-  loglog(t_trap_avg(ampl_i,:), err_trap(ampl_i,:), '.', 'Markersize', 10);
+  loglog(t_trap_avg(ampl_i,:), err_trap(ampl_i,:), 'x', 'Markersize', 10, 'color', C(ampl_i,:));
   hold on;
-  title("Trap error vs runtime");
-  ylim([1e-6 1]);
+  ylim([1e-6 1e2]);
   xlim([1 100]);
+  legendInfo{2*ampl_i-1} = ['ampl = ' num2str(ampl(ampl_i), "%.0e") ' (FE)'];  
+  legendInfo{2*ampl_i} = ['ampl = ' num2str(ampl(ampl_i), "%.0e") ' (trap)'];  
 end
 figure(f1);
-legend(num2str(ampl'));
-figure(f2);
-legend(num2str(ampl'));
+title("Trap and Forward Euler error vs runtime");
+xlabel("average runtime [s]");
+ylabel("relative error of output (L_\infty)");
+legend(legendInfo, 'numcolumns', 2);
+
