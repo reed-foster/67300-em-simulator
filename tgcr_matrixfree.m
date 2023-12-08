@@ -1,4 +1,4 @@
-function [x, r_norms, k] = tgcr_matrixfree(eval_f,xf,b,opts);
+function [x, r_norms, k] = tgcr_matrixfree(eval_f,xf,b,T_inv,opts);
   % generalized conjugate residual method for solving [df/dx] x = b
   % using matrix-free technique
   % usage
@@ -6,16 +6,22 @@ function [x, r_norms, k] = tgcr_matrixfree(eval_f,xf,b,opts);
   % eval_f: evaluates system at x
   % xf: state to evaluate Jacobian [df/dx]
   % b: right hand side of linear system to be solved
+  % T_inv: inverse of preconditioning matrix T
   % opts: struct with options for GCR
   %  err_b: termination condition on error norm(b - Ax)/norm(b)
   %  max_iter: maximum number of iterations
   %  eps_x: finite difference perturbation for matrix-free directional derivative
+  %  preconditioner: if true, use preconditioning matrix T_inv for GCR
 
   % initial guess for x is zero
   x = zeros(size(b));
 
   % set initial residual to b - Ax^0 = b (since x^0 = 0)
-  r = b;
+  if opts.preconditioner
+    r = T_inv*b;
+  else
+    r = b;
+  end
   r_norms(1) = norm(r,2);
   k = 1;
   
@@ -34,6 +40,11 @@ function [x, r_norms, k] = tgcr_matrixfree(eval_f,xf,b,opts);
     % matrix-free approximation for Ap(:,k) = A*p(:,k) (since A is a Jacobian)
     epsilon_norm = epsilon_xf / r_norms(k);
     Ap(:,k) = (eval_f(xf + p(:,k)*epsilon_norm)- eval_f(xf))/epsilon_norm;
+    if opts.preconditioner
+      Ap(:,k) = T_inv*(eval_f(xf + p(:,k)*epsilon_norm)- eval_f(xf))/epsilon_norm;
+    else
+      Ap(:,k) = (eval_f(xf + p(:,k)*epsilon_norm)- eval_f(xf))/epsilon_norm;
+    end
 
     % orthogonalize Ap to previous Ap vectors
     % orthogonalize p vectors A^TA-orthogonal to previous p vectors
