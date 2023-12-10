@@ -52,10 +52,9 @@ function [t,X] = trapezoid(eval_f,p,u,x0,tf,dt_max,Jf0,trap_opts,newton_opts);
      f_trap = @(x,p,u) x - dt_l/2*eval_f(x,p,u) - gamma;
      % call newton to solve f_trap
      if trap_opts.linear_only == true
-       % Solve the system directly
-       Jf_trap = speye(size(Jf0, 1)) - p.dt/2*Jf0;
-       x = Jf_trap\(-f_trap(X(:,end),p,u_t));
-
+        % Solve the system directly
+        dx = Jf0_trap\(-f_trap(X(:,end),p,u_t));
+        x = X(:,end) + dx;
      else
        [x,converged,err_f_k,err_dx_k,err_rel_k,k,k_gcr,~] = newton(f_trap, p, u_t, X(:,end) + dt_l*eval_f(X(:,end),p,u_t), T_inv, newton_opts);
        % use number of iterations to dynamically adjust timestep

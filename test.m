@@ -11,7 +11,7 @@ dtP0 = zeros(size(p.Lorentz,1), p.N);
 X0 = generate_X(E0, dtE0, P0, dtP0, p);
 
 p.ampl_J = 3e7/p.dz*p.omega_J;
-p.dt = 1e-16;
+p.dt = 1e-17;
 
 newton_opts.err_f = Inf;
 newton_opts.err_dx = Inf;
@@ -23,8 +23,8 @@ newton_opts.eps_fd = 1e-7; % relative perturbation for Jacobian
 newton_opts.preconditioner = true;
 
 trap_opts.save_intermediate = true;
-%trap_opts.visualize_dt = 1e-16;
-trap_opts.visualize_dt = Inf;
+trap_opts.visualize_dt = 1e-16;
+% trap_opts.visualize_dt = Inf;
 trap_opts.adaptive_timestep = false;
 trap_opts.linear_only = false;
 trap_opts.print_debug = false;
