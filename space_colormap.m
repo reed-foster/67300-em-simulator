@@ -1,5 +1,6 @@
 function space_colormap(X, t, p)
-
+    n = 1;
+    
     % Change when vectorize split_X
     for i = 1:size(X, 2)
         [E(:, i), ~, ~, ~] = split_X(X(:, i)./p.X_scale, p);
@@ -9,9 +10,9 @@ function space_colormap(X, t, p)
     z_temp = 0:p.dz:(p.dz*size(E, 1)-p.dz);
     z = z_temp - mean(z_temp);
     
-    [T, Z] = meshgrid(t(1:10:end)*1e15, z(1:10:end)*1e6);
+    [T, Z] = meshgrid(t(1:n:end)*1e15, z(1:n:end)*1e6);
     figure;
-    surf(T, Z, E(1:10:end,1:10:end), 'EdgeColor','None');
+    surf(T, Z, E(1:n:end,1:n:end), 'EdgeColor','None');
     view(2);
     xlabel('Time [fs]');
     ylabel('Position [um]');
