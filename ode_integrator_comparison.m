@@ -111,26 +111,34 @@ end
 % also sweep over timestep and excitation amplitude
 % run each sim 50x and pick the median of the top 10 times
 dt_euler_unstable = 1e-19;
-N_trials = 10;
-err_rel = logspace(-2, -8, 3);
-err_gcr = logspace(-2, -8, 3);
-dt = logspace(-16, -20, 5);
+N_trials = 20;
+dt = logspace(-15, -19, 13);
 ampl = logspace(-4, 8, 4);
 t_euler = zeros(N_trials, length(ampl), length(dt));
-t_trap = zeros(N_trials, length(ampl), length(dt), length(err_rel), length(err_gcr));
+t_trap = zeros(N_trials, length(ampl), length(dt));
+t_trap_precond = zeros(N_trials, length(ampl), length(dt));
 X_euler = zeros(size(X0,1), length(ampl), length(dt));
-X_trap = zeros(size(X0,1), length(ampl), length(dt), length(err_rel), length(err_gcr));
+X_trap = zeros(size(X0,1), length(ampl), length(dt));
+X_trap_precond = zeros(size(X0,1), length(ampl), length(dt));
 
 % setup for Trapezoidal + NewtonGCR
 newton_opts.err_f = Inf;
 newton_opts.err_dx = Inf;
+newton_opts.err_rel = 1e-2;
 newton_opts.max_iter = 20;
 newton_opts.matrix_free = true; % use matrix-free GCR solver for dx = J\(-f)
+newton_opts.err_gcr = 1e-2; % relative error for GCR residual inside Newton
 newton_opts.eps_fd = 1e-7; % relative perturbation for Jacobian
 trap_opts.save_intermediate = false; % only save final state
-trap_opts.visualize = Inf; % don't visualize
+trap_opts.visualize_dt = Inf; % don't visualize
+trap_opts.print_debug = false; % don't print number of iterations
+trap_opts.adaptive_timestep = false;
+trap_opts.linear_only = false;
 euler_opts.save_intermediate = false;
-euler_opts.visualize = Inf;
+euler_opts.visualize_dt = Inf;
+
+% zero-field Jacobian
+[Jf0, ~] = Linearize_f(@eval_f, X0, p, zeros(p.N,1), 1e-6);
 
 if ~isfile("ode_comparison.mat")
   for trial=1:N_trials
@@ -142,7 +150,7 @@ if ~isfile("ode_comparison.mat")
       disp(num2str(p.ampl_J,"setting amplitude to %.2d [A/m/s]"));
       for dt_i=1:length(dt)
         p.dt = dt(dt_i);
-        disp(num2str(p.dt,"setting timestep to %.0d [s]"));
+        disp(num2str(p.dt,"setting timestep to %.2d [s]"));
         % do euler measurement
         disp("doing Forward Euler measurement");
         tic;
@@ -150,44 +158,51 @@ if ~isfile("ode_comparison.mat")
         t_euler(trial,ampl_i,dt_i) = toc;
         X_euler(:,ampl_i,dt_i) = X;
         disp(num2str(t_euler(trial,ampl_i,dt_i), "... took %d [s]"));
-        save("ode_comparison.mat","N_trials","ampl","dt","err_rel","err_gcr","t_euler","t_trap","X_euler","X_trap","newton_opts","trap_opts","p");
-        if p.dt > dt_euler_unstable
+        save("ode_comparison.mat","N_trials","ampl","dt","t_euler","t_trap","t_trap_precond","X_euler","X_trap","X_trap_precond","newton_opts","trap_opts","p","Jf0");
+
+        if p.dt > 5e-19
           % do trap measurement
-          disp("doing Trap + Newton GCR measurements");
-          for err_rel_i=1:length(err_rel)
-            newton_opts.err_rel = err_rel(err_rel_i);
-            disp(num2str(newton_opts.err_rel, "setting newton err_rel to %d"));
-            for err_gcr_i=1:length(err_gcr)
-              newton_opts.err_gcr = err_gcr(err_gcr_i);
-              disp(num2str(newton_opts.err_gcr, "setting newton err_gcr to %d"));
-              tic;
-              [t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, trap_opts, newton_opts);
-              t_trap(trial,ampl_i,dt_i,err_rel_i,err_gcr_i) = toc;
-              X_trap(:,ampl_i,dt_i,err_rel_i,err_gcr_i) = X;
-              disp(num2str(t_trap(trial,ampl_i,dt_i,err_rel_i,err_gcr_i), "... took %d [s]"));
-              save("ode_comparison.mat","N_trials","ampl","dt","err_rel","err_gcr","t_euler","t_trap","X_euler","X_trap","newton_opts","trap_opts","p");
-            end
-          end
+          disp("doing Trap + Newton GCR measurement (no preconditioner)");
+          newton_opts.preconditioner = false;
+          tic;
+          [t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, Jf0, trap_opts, newton_opts);
+          t_trap(trial,ampl_i,dt_i) = toc;
+          X_trap(:,ampl_i,dt_i) = X;
+          disp(num2str(t_trap(trial,ampl_i,dt_i), "... took %d [s]"));
+
+          disp("doing Trap + Newton GCR measurement (with preconditioner)");
+          newton_opts.preconditioner = true;
+          tic;
+          [t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, Jf0, trap_opts, newton_opts);
+          t_trap_precond(trial,ampl_i,dt_i) = toc;
+          X_trap_precond(:,ampl_i,dt_i) = X;
+          disp(num2str(t_trap_precond(trial,ampl_i,dt_i), "... took %d [s]"));
+          save("ode_comparison.mat","N_trials","ampl","dt","t_euler","t_trap","t_trap_precond","X_euler","X_trap","X_trap_precond","newton_opts","trap_opts","p","Jf0");
         end
       end
     end
   end
 else
   load("ode_comparison.mat");
-  % N_trials, ampl, dt, err_rel, err_gcr, t_euler, t_trap, X_euler, X_trap, newton_opts, trap_opts, p
+  % N_trials, ampl, dt, err_rel, err_gcr, t_euler, t_trap, X_euler, X_trap, newton_opts, trap_opts, p, Jf0
 end
 
 % compare
 % do plot of error vs runtime with separate series for each amplitude
 t_euler_avg = [];
 t_trap_avg = [];
+t_trap_precond_avg = [];
 err_euler = [];
 err_trap = [];
-N_avg = 5;
-f1 = figure;
+err_trap_precond = [];
+N_avg = 10;
+f1 = figure; % low amplitude plot
+f2 = figure; % high amplitude plot
 C = colororder;
-for ampl_i=1:length(ampl)
+field_ampl = [];
+for ampl_i = [1 length(ampl)]
   [E_ref, ~, P_ref, ~] = split_X(X_ref(:,ampl_i,end)./p.X_scale, p);
+  field_ampl(end+1) = max(abs(E_ref));
   for dt_i=1:length(dt)
     % get error and avg runtime of Forward Euler
     t_euler_avg(ampl_i,end+1) = median(mink(t_euler(:,ampl_i,dt_i),N_avg));
@@ -196,31 +211,58 @@ for ampl_i=1:length(ampl)
     P_err = max(abs(sum(P,1) - sum(P_ref,1))./max(abs(sum(P_ref,1))));
     err_euler(ampl_i,end+1) = max(E_err, P_err);
 
-    % get error and avg runtime of Trapezoidal
-    runtime = median(mink(t_trap(:,ampl_i,dt_i,1,1),N_avg));
+    % get error and avg runtime of Trapezoidal (without preconditioner)
+    runtime = median(mink(t_trap(:,ampl_i,dt_i),N_avg));
     if runtime > 0
-      t_trap_avg(ampl_i,end+1) = runtime;
-      [E, ~, P, ~] = split_X(X_trap(:,ampl_i,dt_i,1,1)./p.X_scale, p);
+      [E, ~, P, ~] = split_X(X_trap(:,ampl_i,dt_i)./p.X_scale, p);
       E_err = max(abs(E - E_ref)./max(abs(E_ref)));
       P_err = max(abs(sum(P,1) - sum(P_ref,1))./max(abs(sum(P_ref,1))));
-      err_trap(ampl_i,end+1) = max(E_err, P_err);
+      if (max(E_err, P_err) <= 1)
+        err_trap(ampl_i,end+1) = max(E_err, P_err);
+        t_trap_avg(ampl_i,end+1) = runtime;
+      end
+    end
+
+    % get error and avg runtime of Trapezoidal (with preconditioner)
+    runtime = median(mink(t_trap_precond(:,ampl_i,dt_i),N_avg));
+    if runtime > 0
+      [E, ~, P, ~] = split_X(X_trap_precond(:,ampl_i,dt_i)./p.X_scale, p);
+      E_err = max(abs(E - E_ref)./max(abs(E_ref)));
+      P_err = max(abs(sum(P,1) - sum(P_ref,1))./max(abs(sum(P_ref,1))));
+      if (max(E_err, P_err) <= 1)
+        err_trap_precond(ampl_i,end+1) = max(E_err, P_err);
+        t_trap_precond_avg(ampl_i,end+1) = runtime;
+      end
     end
   end
-  figure(f1);
-  loglog(t_euler_avg(ampl_i,:), err_euler(ampl_i,:), 'o', 'Markersize', 10, 'color', C(ampl_i,:));
+  if ampl_i == 1
+    figure(f1);
+  else
+    figure(f2);
+  end
+  h = loglog(t_euler_avg(ampl_i,:), err_euler(ampl_i,:), '^', MarkerSize=10);
+  set(h, 'MarkerFaceColor', get(h, 'Color'));
   hold on;
-  ylim([1e-6 1e2]);
-  xlim([1 100]);
-  loglog(t_trap_avg(ampl_i,:), err_trap(ampl_i,:), 'x', 'Markersize', 10, 'color', C(ampl_i,:));
-  hold on;
-  ylim([1e-6 1e2]);
-  xlim([1 100]);
-  legendInfo{2*ampl_i-1} = ['ampl = ' num2str(ampl(ampl_i), "%.0e") ' (FE)'];  
-  legendInfo{2*ampl_i} = ['ampl = ' num2str(ampl(ampl_i), "%.0e") ' (trap)'];  
+  h = loglog(t_trap_avg(ampl_i,:), err_trap(ampl_i,:), 'o', MarkerSize=10);
+  set(h, 'MarkerFaceColor', get(h, 'Color'));
+  h = loglog(t_trap_precond_avg(ampl_i,:), err_trap_precond(ampl_i,:), 's', MarkerSize=10);
+  set(h, 'MarkerFaceColor', get(h, 'Color'));
+  legend('Forward Euler', 'Trapezoidal/Newton-GCR', 'Trapezoidal/Newton-GCR + Preconditioner');
+  ylim([1e-3 1e1]);
+  xlim([0.5 50]);
 end
+
 figure(f1);
-title("Trap and Forward Euler error vs runtime");
-xlabel("average runtime [s]");
-ylabel("relative error of output (L_\infty)");
-legend(legendInfo, 'numcolumns', 2);
+ax = gca;
+ax.FontSize = 16;
+title(num2str(field_ampl(1), "E-field amplitude = %.0e [V/m]"));
+xlabel("average runtime [s]",FontSize=16);
+ylabel("relative error of output (L_\infty)",FontSize=16);
+
+figure(f2);
+ax = gca;
+ax.FontSize = 16;
+title(num2str(field_ampl(end), "E-field amplitude = %.0e [V/m]"));
+xlabel("average runtime [s]",FontSize=16);
+ylabel("relative error of output (L_\infty)",FontSize=16);
 

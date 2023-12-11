@@ -11,31 +11,34 @@ function [t,X] = forward_euler(eval_f,p,u,x0,tf,dt,opts)
 % tf: simulation stop time
 % dt: timestep
 % opts: struct with options for forward euler
-%  visualize: if Inf, don't visualize, otherwise show state every 'visualize'th frame
+%  visualize_dt: if Inf, don't visualize, otherwise show state every visualize_dt step
 %  save_intermediate: if true, save all results, otherwise only save final result
 
 X(:,1) = x0;
 t(1)   = 0;
 
-if (opts.visualize < Inf)
+if (opts.visualize_dt < Inf)
    visualize_struct.init = true;
    visualize_struct = visualize_state(X(:,1), t(1), p, visualize_struct);
 end
 
+t_last_visualized = 0;
 for n = 1 : ceil(tf/dt)
-   if opts.save_intermediate
-      l = n;
-      lp = n+1;
-   else
-      l = 1;
-      lp = 1;
-   end
-   dt_l     = min(dt, tf-t(l));
-   u_t      = u(t(l), p);
-   f        = eval_f(X(:,l), p, u_t);
-   t(lp)   = t(l) + dt_l;
-   X(:,lp) = X(:,l) +  dt_l * f;
-   if mod(n, opts.visualize) == 0
-      visualize_state(X(:,l),t(l),p,visualize_struct);
-   end
+  if opts.save_intermediate
+    l = n;
+    lp = n+1;
+  else
+    l = 1;
+    lp = 1;
+  end
+  dt_l     = min(dt, tf-t(l));
+  u_t      = u(t(l), p);
+  f        = eval_f(X(:,l), p, u_t);
+  t(lp)   = t(l) + dt_l;
+  X(:,lp) = X(:,l) +  dt_l * f;
+  % visualize
+  if t_last_visualized + opts.visualize_dt < t(end)
+    visualize_state(X(:,end),t(end),p,visualize_struct);
+    t_last_visualized = t(end);
+  end
 end
