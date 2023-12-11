@@ -23,17 +23,25 @@ newton_opts.eps_fd = 1e-7; % relative perturbation for Jacobian
 newton_opts.preconditioner = true;
 
 trap_opts.save_intermediate = true;
-trap_opts.visualize_dt = 1e-16;
-% trap_opts.visualize_dt = Inf;
+% trap_opts.visualize_dt = 1e-16;
+trap_opts.visualize_dt = Inf;
 trap_opts.adaptive_timestep = false;
-trap_opts.linear_only = false;
+trap_opts.linear_only = true;
 trap_opts.print_debug = false;
 
 [Jf0, ~] = Linearize_f(@eval_f, X0, p, zeros(p.N,1), 1e-6);
 
 tic;
 [t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, Jf0, trap_opts, newton_opts);
-toc;
+% [t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, Jf0, trap_opts, newton_opts);
+linear_only = toc
+
+trap_opts.linear_only = false;
+
+tic;
+[t,X] = trapezoid(@eval_f, p, @eval_u, X0, p.tf, p.dt, Jf0, trap_opts, newton_opts);
+matrix_free = toc
+
 
 
 

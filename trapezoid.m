@@ -37,6 +37,10 @@ function [t,X] = trapezoid(eval_f,p,u,x0,tf,dt_max,Jf0,trap_opts,newton_opts);
    T_node = Jf0_trap(N_nodal_vars+1:2*N_nodal_vars,N_nodal_vars+1:2*N_nodal_vars); % pick a node away from the edge so we don't have the Dirichlet boundary condition
    T_inv = kron(speye(p.N), T_node\speye(N_nodal_vars));
 
+   if trap_opts.linear_only == true
+       [L,U,P] = lu(Jf0_trap);
+   end
+
    if (trap_opts.adaptive_timestep)
      dt = dt_max/10;
    else
@@ -50,12 +54,14 @@ function [t,X] = trapezoid(eval_f,p,u,x0,tf,dt_max,Jf0,trap_opts,newton_opts);
      gamma = X(:,end) + dt_l/2*eval_f(X(:,end),p,u_t);
      % trap function and jacobian
      f_trap = @(x,p,u) x - dt_l/2*eval_f(x,p,u) - gamma;
-     % call newton to solve f_trap
      if trap_opts.linear_only == true
         % Solve the system directly
-        dx = Jf0_trap\(-f_trap(X(:,end),p,u_t));
+        b = -f_trap(X(:,end),p,u_t);
+        y = L\(P*b);
+        dx = U\y;
         x = X(:,end) + dx;
      else
+       % call newton to solve f_trap
        [x,converged,err_f_k,err_dx_k,err_rel_k,k,k_gcr,~] = newton(f_trap, p, u_t, X(:,end) + dt_l*eval_f(X(:,end),p,u_t), T_inv, newton_opts);
        % use number of iterations to dynamically adjust timestep
        if (trap_opts.adaptive_timestep)
