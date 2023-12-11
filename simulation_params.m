@@ -24,7 +24,7 @@ function p = simulation_params;
 
   % simulation parameters
   p.x_order = 0;
-  p.N = 3001; % discretization
+  p.N = 1001; % discretization
   p.dz = 10e-9; % m
   p.dt = p.dz/3e8; % s
   p.tf = 20e-15; % s

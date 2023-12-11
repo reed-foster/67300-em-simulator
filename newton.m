@@ -43,10 +43,7 @@ function [x,converged,err_f_k,err_dx_k,err_rel_k,iterations,max_gcr_iterations,X
      else
        eps_J = max(opts.eps_fd*norm(X(:,k),inf), eps);
        Jf = JacobianCalculation(@(x) eval_f(x,p,u), X(:,k), eps_J, size(x0,1));
-       disp(num2str(norm(Jf-Jf0,inf)/norm(Jf,inf), "newton Jacobian vs. Jf0 erorr %0d"));
-       disp(num2str(eps_J, "eps_J = %0d"));
        dx = Jf\(-f);
-       %dx = Jf0\(-f);
      end
      X(:,k+1) = X(:,k) + dx;
      err_f_k(k+1) = norm(f,inf);
