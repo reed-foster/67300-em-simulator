@@ -24,17 +24,17 @@ function p = simulation_params;
 
   % simulation parameters
   p.x_order = 0;
-  p.N = 1001; % discretization
+  p.N = 2001; % discretization
   p.dz = 10e-9; % m
   p.dt = p.dz/3e8; % s
-  p.tf = 20e-15; % s
+  p.tf = 100e-15; % s
 
   % source parameters
   p.omega_J = 2*pi*3e8/1.55e-6; % angular frequency for 1.55um
-  p.t0_J = 2*2*pi/p.omega_J; % s, sets delay for ricker wavelet, also sets turnon time of source
+  p.t0_J = 4*2*pi/p.omega_J; % s, sets delay for ricker wavelet, also sets turnon time of source
   p.ampl_J = 5e7/p.dz*p.omega_J; % arbitrary
   %p.ampl_J = 5e-3/p.dz*p.omega_J; % arbitrary
-  p.source_type = "ricker"; % ricker or sinusoid
+  p.source_type = "sinusoid"; % ricker or sinusoid
 
   % precompute unit scaling
   p.E_scale = p.eps_0;

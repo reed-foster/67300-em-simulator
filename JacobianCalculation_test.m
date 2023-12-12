@@ -32,7 +32,7 @@ JacobAnalytic = [TL, TR; BL, BR];
 
 % compute Jacobian
 for i = 1:length(eps)
-    Jcalc = JacobianCalculation(@(X) evalf_freespace(X,J,p), X0, eps(i), 2*p.N);
+    Jcalc = JacobianCalculation(@(X) evalf_freespace(X,J,p), X0, eps(i), 2*p.N, 2*p.N);
     rel_err(i) = norm(Jcalc - JacobAnalytic)/norm(JacobAnalytic);
 end
 

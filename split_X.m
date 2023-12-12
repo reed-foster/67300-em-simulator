@@ -14,25 +14,49 @@ function [E, dtE, P, dtP] = split_X(X, params);
   %   0:  [E_1, dtE_1, P_11, dtP_11, P_21, dtP_21, P_31, dtP_31, ... E_2, dtE_2, P_12, dtP_12 ...]
   %   1:  [E_1, E_2, ... dtE_1, dtE_2, ... P_11, P_12, ... P_21, P_22, ... dtP_11, dtP_12, ... dtP_21, dtP_22]
 
+  dim_X = size(size(X), 2);
+
   num_poles = size(params.Lorentz, 1);
   idx_step = 2*(1 + num_poles);
-  dxdt = zeros(params.N*idx_step, 1);
-  % get the offset into the state variable
-  if params.x_order == 0
-    E = X(1:idx_step:end); % Nx1
-    dtE = X(2:idx_step:end); % Nx1
-    P = zeros(num_poles, params.N); % PxN
-    dtP = zeros(num_poles, params.N); % PxN
-    for p = 1:num_poles
-      P(p,:) = X(3+2*(p-1):idx_step:end);
-      dtP(p,:) = X(4+2*(p-1):idx_step:end);
+  if dim_X == 1
+    dxdt = zeros(params.N*idx_step, 1);
+    % get the offset into the state variable
+    if params.x_order == 0
+      E = X(1:idx_step:end); % Nx1
+      dtE = X(2:idx_step:end); % Nx1
+      P = zeros(num_poles, params.N); % PxN
+      dtP = zeros(num_poles, params.N); % PxN
+      for p = 1:num_poles
+        P(p,:) = X(3+2*(p-1):idx_step:end);
+        dtP(p,:) = X(4+2*(p-1):idx_step:end);
+      end
+    else
+      E = X(1:params.N);
+      dtE = X(params.N+1:2*params.N);
+      for p = 1:num_poles
+        P(p,:) = X(2*params.N+1 + params.N*(p-1):2*params.N + params.N*p);
+        dtP(p,:) = X(params.N*(2+num_poles)+1 + params.N*(p-1):params.N*(2+num_poles) + params.N*p);
+      end
     end
   else
-    E = X(1:params.N);
-    dtE = X(params.N+1:2*params.N);
-    for p = 1:num_poles
-      P(p,:) = X(2*params.N+1 + params.N*(p-1):2*params.N + params.N*p);
-      dtP(p,:) = X(params.N*(2+num_poles)+1 + params.N*(p-1):params.N*(2+num_poles) + params.N*p);
+    dxdt = zeros(params.N*idx_step, size(X,dim_X));
+    % get the offset into the state variable
+    if params.x_order == 0
+      E = X(1:idx_step:end,:); % Nx1
+      dtE = X(2:idx_step:end,:); % Nx1
+      P = zeros(num_poles, params.N, size(X,dim_X)); % PxN
+      dtP = zeros(num_poles, params.N, size(X,dim_X)); % PxN
+      for p = 1:num_poles
+        P(p,:,:) = X(3+2*(p-1):idx_step:end,:);
+        dtP(p,:,:) = X(4+2*(p-1):idx_step:end,:);
+      end
+    else
+      E = X(1:params.N,:);
+      dtE = X(params.N+1:2*params.N,:);
+      for p = 1:num_poles
+        P(p,:,:) = X(2*params.N+1 + params.N*(p-1):2*params.N + params.N*p,:);
+        dtP(p,:,:) = X(params.N*(2+num_poles)+1 + params.N*(p-1):params.N*(2+num_poles) + params.N*p,:);
+      end
     end
   end
 end

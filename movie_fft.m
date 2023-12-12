@@ -1,9 +1,7 @@
 function movie_fft(X, t, p, movie)
 
     % Change when vectorize split_X
-    for i = 1:size(X, 2)
-        [E(:, i), ~, ~, ~] = split_X(X(:, i), p);
-    end
+    E = split_X(X./p.X_scale, p);
     
     % Change it save z somewhere
     z_temp = 0:p.dz:(p.dz*size(E, 1)-p.dz);

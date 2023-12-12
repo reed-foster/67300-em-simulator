@@ -39,10 +39,10 @@ rel_err = zeros(length(eps), 2);
 % try for zero (initial condition) and nonzero (final state after perturbing material with free current)
 t_idx = [1 size(X,1)];
 for j = 1:2;
-    Jbest = JacobianCalculation(@(X) nonlinear_f(X,0,params), X(t_idx(j),:)', 1e3, size(X,2));
+    Jbest = JacobianCalculation(@(X) nonlinear_f(X,0,params), X(t_idx(j),:)', 1e3, size(X,2), size(X,2));
     % compute Jacobian
     for i = 1:length(eps)
-        Jcalc = JacobianCalculation(@(X) nonlinear_f(X,dtJ(:,end),params), X(t_idx(j),:)', eps(i), size(X,2));
+        Jcalc = JacobianCalculation(@(X) nonlinear_f(X,dtJ(:,end),params), X(t_idx(j),:)', eps(i), size(X,2), size(X,2));
         rel_err(i,j) = norm(Jcalc - Jbest)/norm(Jbest);
     end
 end
@@ -55,10 +55,10 @@ title('Relative error for Jacobian vs $\epsilon$', 'Interpreter', 'latex')
 xlabel('$\epsilon$', 'Interpreter', 'latex')
 ylabel('$\frac{\|Jc - J_0\|}{\|J_0\|}$', 'Interpreter', 'latex')
 
-custom_spy(JacobianCalculation(@(X) nonlinear_f(X,0,params), X0, 1e3, size(X0,1)));
+custom_spy(JacobianCalculation(@(X) nonlinear_f(X,0,params), X0, 1e3, size(X0,1), size(X0,1)));
 title("Sparsity with new ordering");
 
 params.x_order = 1;
 X0 = nonlinear_generate_X(E0, dtE0, P0, dtP0, params);
-custom_spy(JacobianCalculation(@(X) nonlinear_f(X,0,params), X0, 1e3, size(X0,1)));
+custom_spy(JacobianCalculation(@(X) nonlinear_f(X,0,params), X0, 1e3, size(X0,1), size(X0,1)));
 title("Sparsity with old ordering");
