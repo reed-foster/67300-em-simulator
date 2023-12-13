@@ -14,7 +14,7 @@ function movie_fft(X, t, p, movie)
     for i = 1:100:length(E(1, :))
         
         fft_fig = figure(1);
-        % set(fft_fig, 'resize', 'off', 'Position', [100 100 1380 820]);
+        set(fft_fig, 'resize', 'off', 'Position', [100 100 1380 820]);
         field_fft(E(:, i), z, t(i), p)
         pause(0.1)
     

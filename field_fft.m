@@ -6,6 +6,7 @@ function field_fft(E, z, t, p)
     xlabel('Position (m)');
     ylabel('Amplitude');
     title("Signal in Time Domain at t = " + num2str(t) + " s")
+    xlim([min(z), max(z)])
     ax = gca;
     ax.FontSize = 14;
 
@@ -22,7 +23,7 @@ function field_fft(E, z, t, p)
     title("Signal in Wavevector Domain")
     xlabel('Wavevector (1/m)');
     ylabel('Amplitude');
-    xlim([-max(fshift)/4, max(fshift)/4]);
+    xlim([-max(fshift)/3, max(fshift)/3]);
     ax = gca;
     ax.FontSize = 14;
     % ylim([0, max(max(abs(fft(E))))])

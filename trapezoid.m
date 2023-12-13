@@ -83,9 +83,11 @@ function [t,X] = trapezoid(eval_f,p,u,x0,tf,dt_max,Jf0,trap_opts,newton_opts);
       t(end) = t(end) + dt_l;
     end
     % visualize
-    if t_last_visualized + trap_opts.visualize_dt <= t(end)
-      visualize_state(X(:,end),t(end),p,visualize_struct);
-      t_last_visualized = t(end);
+    if trap_opts.visualize_dt ~= Inf
+        if t_last_visualized + trap_opts.visualize_dt <= t(end) || t(end) == tf
+          visualize_state(X(:,end),t(end),p,visualize_struct);
+          t_last_visualized = t(end);
+        end
     end
   end
 end

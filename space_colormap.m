@@ -11,7 +11,8 @@ function space_colormap(X, t, p)
     z = z_temp - mean(z_temp);
     
     [T, Z] = meshgrid(t(1:n:end)*1e15, z(1:n:end)*1e6);
-    figure;
+    colormap_fig = figure;
+    set(colormap_fig, 'resize', 'off', 'Position', [100 100 1180 820]);
     surf(T, Z, E(1:n:end,1:n:end), 'EdgeColor','None');
     view(2);
     xlabel('Time [fs]');
