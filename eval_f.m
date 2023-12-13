@@ -37,7 +37,8 @@ function dxdt = eval_f(X,params,dtJ)
   end
   % eqn 2: wave equation (d/dt(dtE) = 1/mu_0*(d/dz)(d/dz)E ...);
   dtdtE = 1/params.mu_0*laplacian(E,params.dz);
-  dtdtE = dtdtE - (2*params.eps_0).*(2*heaviside(E)-1).*(params.chi_2 + 3*params.chi_3.*abs(E)).*(dtE.^2);
+  %dtdtE = dtdtE - (2*params.eps_0).*(2*heaviside(E)-1).*(params.chi_2 + 3*params.chi_3.*abs(E)).*(dtE.^2);
+  dtdtE = dtdtE - (2*params.eps_0).*tanh(1e-9*E).*(params.chi_2 + 3*params.chi_3.*abs(E)).*(dtE.^2);
   dtdtE = dtdtE - sum(dtdtP, 1)' + dtJ;
   dtdtE = dtdtE ./ (params.eps_0*(1 + params.chi_2.*abs(E) + params.chi_3.*abs(E).^2));
   dxdt = generate_X(dtE, dtdtE, dtP, dtdtP, params).*(params.X_scale);

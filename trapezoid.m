@@ -28,6 +28,11 @@ function [t,X] = trapezoid(eval_f,p,u,x0,tf,dt_max,Jf0,trap_opts,newton_opts);
 
   if (trap_opts.visualize_dt < Inf)
     visualize_struct.init = true;
+    if sum(contains(fieldnames(trap_opts), 'movie_name'))
+      visualize_struct.save_movie = true;
+    else
+      visualize_struct.save_movie = false;
+    end
     visualize_struct = visualize_state(X(:,1), t(1), p, visualize_struct);
   end
 
@@ -84,8 +89,18 @@ function [t,X] = trapezoid(eval_f,p,u,x0,tf,dt_max,Jf0,trap_opts,newton_opts);
     end
     % visualize
     if t_last_visualized + trap_opts.visualize_dt <= t(end)
-      visualize_state(X(:,end),t(end),p,visualize_struct);
-      t_last_visualized = t(end);
+      visualize_struct = visualize_state(X(:,end),t(end),p,visualize_struct);
+      t_last_visualized = t(end) - mod(t(end), trap_opts.visualize_dt);
     end
+  end
+
+  if (visualize_struct.save_movie)
+    disp(num2str(length(visualize_struct.frames), "saving movie with %0d frames"));
+    writerObj = VideoWriter(trap_opts.movie_name);
+    open(writerObj);
+    for i = 1:length(visualize_struct.frames)
+      writeVideo(writerObj, visualize_struct.frames(i).cdata);
+    end
+    close(writerObj);
   end
 end

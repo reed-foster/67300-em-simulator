@@ -24,11 +24,12 @@ newton_opts.eps_fd = 1e-7; % relative perturbation for Jacobian
 newton_opts.preconditioner = true;
 
 trap_opts.save_intermediate = true;
-trap_opts.visualize_dt = 5e-16;
+trap_opts.visualize_dt = 2e-16;
 %trap_opts.visualize_dt = Inf;
 trap_opts.adaptive_timestep = false;
 trap_opts.linear_only = false;
 trap_opts.print_debug = false;
+trap_opts.movie_name = "test.avi";
 
 Jf0 = FastJacobian(@(x) eval_f(x,p,0), X0, p, 1e-9, p.N);
 

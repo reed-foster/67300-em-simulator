@@ -23,6 +23,10 @@ function visualize_struct = visualize_state(X, t, params, visualize_struct);
 
     xlabel(visualize_struct.ax_dtE, "z [um]");
 
+    if (visualize_struct.save_movie)
+      visualize_struct.frames(1) = getframe(gcf);
+    end
+
   else
     figure(visualize_struct.f);
   end
@@ -42,4 +46,7 @@ function visualize_struct = visualize_state(X, t, params, visualize_struct);
   title(visualize_struct.ax_E, sprintf("t = %0.3f [fs]", t*1e15));
 
   drawnow;
+  if (visualize_struct.save_movie)
+    visualize_struct.frames(end+1) = getframe(gcf);
+  end
 end
